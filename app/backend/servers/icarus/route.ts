@@ -10,55 +10,55 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY_MOVIEBOX!,
 );
 
-function getRandomAfricanIP() {
-  // Source: IANA-confirmed AFRINIC allocations only
-  // 41/8, 102/8, 105/8, 197/8 + 45.96-111.x (recovered pool)
-  const ranges: [number, number][] = [
-    // 41/8 — Kenya, Nigeria, South Africa, Ghana, Ethiopia
-    [41, 57], // Kenya (Safaricom)
-    [41, 60], // Kenya (Telkom Kenya)
-    [41, 72], // Nigeria (MTN)
-    [41, 73], // Nigeria (Airtel)
-    [41, 116], // South Africa (Vodacom)
-    [41, 138], // South Africa (MTN)
-    [41, 160], // Ghana (MTN Ghana)
-    [41, 175], // Egypt (Telecom Egypt)
-    [41, 188], // Ethiopia (Ethio Telecom)
-    [41, 203], // Ethiopia
-    [41, 215], // Ghana
-    [41, 222], // Tanzania (TTCL)
-    // 102/8 — AFRINIC (allocated Feb 2011, last ever IPv4 block)
-    [102, 0], // Nigeria
-    [102, 22], // South Africa
-    [102, 68], // Nigeria (Airtel)
-    [102, 89], // Nigeria (MTN)
-    [102, 130], // Kenya
-    [102, 164], // South Africa
-    [102, 176], // Egypt
-    [102, 212], // Morocco
-    // 105/8 — AFRINIC
-    [105, 16], // South Africa
-    [105, 48], // Kenya
-    [105, 112], // Nigeria
-    [105, 160], // Egypt
-    [105, 224], // Tanzania
-    // 197/8 — AFRINIC
-    [197, 136], // Morocco
-    [197, 148], // Tunisia
-    [197, 156], // Ghana
-    [197, 210], // Nigeria
-    [197, 232], // Kenya (Safaricom)
-    [197, 248], // South Africa
-    // 45.96-111 — AFRINIC recovered pool
-    [45, 96],
-    [45, 100],
-    [45, 108],
-  ];
+// function getRandomAfricanIP() {
+//   // Source: IANA-confirmed AFRINIC allocations only
+//   // 41/8, 102/8, 105/8, 197/8 + 45.96-111.x (recovered pool)
+//   const ranges: [number, number][] = [
+//     // 41/8 — Kenya, Nigeria, South Africa, Ghana, Ethiopia
+//     [41, 57], // Kenya (Safaricom)
+//     [41, 60], // Kenya (Telkom Kenya)
+//     [41, 72], // Nigeria (MTN)
+//     [41, 73], // Nigeria (Airtel)
+//     [41, 116], // South Africa (Vodacom)
+//     [41, 138], // South Africa (MTN)
+//     [41, 160], // Ghana (MTN Ghana)
+//     [41, 175], // Egypt (Telecom Egypt)
+//     [41, 188], // Ethiopia (Ethio Telecom)
+//     [41, 203], // Ethiopia
+//     [41, 215], // Ghana
+//     [41, 222], // Tanzania (TTCL)
+//     // 102/8 — AFRINIC (allocated Feb 2011, last ever IPv4 block)
+//     [102, 0], // Nigeria
+//     [102, 22], // South Africa
+//     [102, 68], // Nigeria (Airtel)
+//     [102, 89], // Nigeria (MTN)
+//     [102, 130], // Kenya
+//     [102, 164], // South Africa
+//     [102, 176], // Egypt
+//     [102, 212], // Morocco
+//     // 105/8 — AFRINIC
+//     [105, 16], // South Africa
+//     [105, 48], // Kenya
+//     [105, 112], // Nigeria
+//     [105, 160], // Egypt
+//     [105, 224], // Tanzania
+//     // 197/8 — AFRINIC
+//     [197, 136], // Morocco
+//     [197, 148], // Tunisia
+//     [197, 156], // Ghana
+//     [197, 210], // Nigeria
+//     [197, 232], // Kenya (Safaricom)
+//     [197, 248], // South Africa
+//     // 45.96-111 — AFRINIC recovered pool
+//     [45, 96],
+//     [45, 100],
+//     [45, 108],
+//   ];
 
-  const base = ranges[Math.floor(Math.random() * ranges.length)];
-  const rand = () => Math.floor(Math.random() * 254) + 1;
-  return `${base[0]}.${base[1]}.${rand()}.${rand()}`;
-}
+//   const base = ranges[Math.floor(Math.random() * ranges.length)];
+//   const rand = () => Math.floor(Math.random() * 254) + 1;
+//   return `${base[0]}.${base[1]}.${rand()}.${rand()}`;
+// }
 
 export async function getWorkingProxy(url: string, proxies: string[]) {
   for (const proxy of proxies) {
@@ -117,21 +117,18 @@ export async function GET(req: NextRequest) {
     }
 
     // -------- MovieBox Logic --------
-    const randomIP = getRandomAfricanIP();
+    // const randomIP = getRandomAfricanIP();
     const host = "h5.aoneroom.com";
     const baseUrl = `https://${host}`;
-    const headers: Record<string, string> = {
-      "X-Client-Info": '{"timezone":"Africa/Nairobi"}',
-      "Accept-Language": "en-US,en;q=0.5",
-      Accept: "application/json",
-      "User-Agent": "okhttp/4.12.0",
-      Referer:
-        "https://fmoviesunblocked.net/spa/videoPlayPage/movies/the-housemaid-0salyuvbRw2?id=2123398053372510440&type=/movie/detail",
-      "X-Forwarded-For": randomIP,
-      "CF-Connecting-IP": randomIP,
-      "X-Real-IP": randomIP,
-      Origin: "https://fmoviesunblocked.net",
-    };
+    // const headers = {
+    //   "X-Client-Info": '{"timezone":"Africa/Nairobi"}',
+    //   "Accept-Language": "en-US,en;q=0.5",
+    //   Accept: "application/json",
+    //   "User-Agent": "okhttp/4.12.0",
+    //   "X-Forwarded-For": randomIP,
+    //   "CF-Connecting-IP": randomIP,
+    //   "X-Real-IP": randomIP,
+    // };
 
     // -------- Cache Lookup --------
     let subjectId: string;
@@ -206,7 +203,14 @@ export async function GET(req: NextRequest) {
       // Detail
       const detailRes = await fetchWithTimeout(
         `${baseUrl}/wefeed-h5-bff/web/subject/detail?subjectId=${encodeURIComponent(subjectId)}`,
-        { headers },
+        {
+          headers: {
+            // ...headers,
+            Referer:
+              "https://fmoviesunblocked.net/spa/videoPlayPage/movies/the-housemaid-0salyuvbRw2?id=2123398053372510440&type=/movie/detail",
+            Origin: "https://fmoviesunblocked.net",
+          },
+        },
         8000,
       );
       const detailJson = await detailRes.json();
@@ -239,7 +243,7 @@ export async function GET(req: NextRequest) {
       `${baseUrl}/wefeed-h5-bff/web/subject/download?${params.toString()}`,
       {
         headers: {
-          ...headers,
+          // ...headers,
           Referer: `https://fmoviesunblocked.net/spa/videoPlayPage/movies/${detailPath}?id=${subjectId}&type=/movie/detail`,
           Origin: "https://fmoviesunblocked.net",
         },
