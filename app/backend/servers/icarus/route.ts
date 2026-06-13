@@ -76,6 +76,12 @@ export async function getWorkingProxy(url: string, proxies: string[]) {
 }
 
 export async function GET(req: NextRequest) {
+  const logRequest = (status: number, reason: string) => {
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
+    console.log(
+      `[icarus] tmdbId=${tmdbId} ip=${req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown"} status=${status} reason=${reason}`,
+    );
+  };
   try {
     const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id); // "mid"
     const mediaType = req.nextUrl.searchParams.get("b"); // rotate this too if you want
@@ -88,6 +94,7 @@ export async function GET(req: NextRequest) {
     const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!; // "xt"
 
     if (!tmdbId || !mediaType || !title || !year || !ts || !token) {
+      logRequest(404, "missing params");
       return NextResponse.json(
         { success: false, error: "need token" },
         { status: 404 },
@@ -95,6 +102,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (Date.now() - ts > 8000) {
+      logRequest(403, "token expired");
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 403 },
@@ -102,6 +110,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!validateBackendToken(tmdbId, f_token, ts, token)) {
+      logRequest(403, "invalid token");
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 403 },
@@ -110,6 +119,7 @@ export async function GET(req: NextRequest) {
 
     const referer = req.headers.get("referer") || "";
     if (!isValidReferer(referer)) {
+      logRequest(403, "invalid referrer");
       return NextResponse.json(
         { success: false, error: "Forbidden" },
         { status: 403 },
@@ -169,11 +179,13 @@ export async function GET(req: NextRequest) {
       const searchJson = await searchRes.json();
       const results = searchJson?.data?.data || searchJson?.data || searchJson;
       const items = results?.items || [];
-      if (!items.length)
+      if (!items.length) {
+        logRequest(404, "no search results");
         return NextResponse.json(
           { success: false, error: "No search results" },
           { status: 404 },
         );
+      }
 
       const selectedItem =
         items.find(
@@ -185,18 +197,21 @@ export async function GET(req: NextRequest) {
           (i?.title || "").toLowerCase().includes(title.toLowerCase()),
         );
 
-      if (!selectedItem)
+      if (!selectedItem) {
+        logRequest(404, "unavailable");
         return NextResponse.json(
           { success: false, error: "Unavailable" },
           { status: 404 },
         );
-
+      }
       const rawSubjectId = selectedItem?.subjectId;
-      if (!rawSubjectId)
+      if (!rawSubjectId) {
+        logRequest(404, "subjectId not found");
         return NextResponse.json(
           { success: false, error: "SubjectId Not Found" },
           { status: 404 },
         );
+      }
 
       subjectId = String(rawSubjectId);
 
@@ -257,21 +272,24 @@ export async function GET(req: NextRequest) {
     const sourcesJson = await sourcesRes.json();
     const sources = sourcesJson?.data?.data || sourcesJson?.data || sourcesJson;
     const downloads = sources?.downloads || [];
-    if (!downloads.length)
+    if (!downloads.length) {
+      logRequest(404, "no download sources");
       return NextResponse.json(
         { success: false, error: "No download sources" },
         { status: 404 },
       );
-
+    }
     const sortedDownloads = downloads
       .filter((d: any) => d?.url && typeof d.url === "string")
       .sort((a: any, b: any) => (b.resolution || 0) - (a.resolution || 0));
 
-    if (!sortedDownloads.length)
+    if (!sortedDownloads.length) {
+      logRequest(404, "no valid download URLs");
       return NextResponse.json(
         { success: false, error: "No valid download URLs" },
         { status: 404 },
       );
+    }
 
     const proxies = [
       "https://proxy.test4-eb0.workers.dev/",
@@ -316,6 +334,7 @@ export async function GET(req: NextRequest) {
       shuffledProxies,
     );
     if (!workingProxy) {
+      logRequest(502, "no working proxy");
       return NextResponse.json(
         { success: false, error: "No working proxy available" },
         { status: 502 },
@@ -335,7 +354,7 @@ export async function GET(req: NextRequest) {
       display: c.lanName,
       file: c.url,
     }));
-
+    logRequest(200, "ok");
     return NextResponse.json({
       success: true,
       links,
@@ -343,6 +362,7 @@ export async function GET(req: NextRequest) {
       meow: !!cached,
     });
   } catch (err: any) {
+    logRequest(500, `exception: ${err?.message}`);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },

@@ -194,7 +194,7 @@ export async function GET(req: NextRequest) {
       (r) => r.json(),
     );
 
-    console.log("dataaaa", data);
+    // console.log("dataaaa", data);
 
     if (!data.success) return NextResponse.json(data, { status: 500 });
 

@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const referer = req.headers.get("referer") || "";
 
-  console.log({ connectingIp: connectingIp, ip: ip });
+  // console.log({ connectingIp: connectingIp, ip: ip });
   if (!ALLOWED_ORIGINS.includes(origin)) {
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (blockedIPs.includes(ip)) {
-    console.log("Blocked IP tried to access:", ip, ua);
+    // console.log("Blocked IP tried to access:", ip, ua);
     return new Response(null, { status: 403 });
   }
 
