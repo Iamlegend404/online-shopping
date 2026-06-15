@@ -85,13 +85,12 @@ export async function GET(req: NextRequest) {
     const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
     const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
     const title = req.nextUrl.searchParams.get(FIELD_MAP.title);
-    const year = req.nextUrl.searchParams.get(FIELD_MAP.year);
     const ts = Number(req.nextUrl.searchParams.get(FIELD_MAP.ts));
     const token = req.nextUrl.searchParams.get(FIELD_MAP.token)!;
     const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!;
     const dubLang = req.nextUrl.searchParams.get("dub"); // e.g. "hi", "es", "fr"
-
-    if (!tmdbId || !mediaType || !title || !year || !ts || !token) {
+    const date = req.nextUrl.searchParams.get("date");
+    if (!tmdbId || !mediaType || !title || !date || !ts || !token) {
       logRequest(404, "missing params");
       return NextResponse.json(
         { success: false, error: "need token" },
@@ -185,6 +184,8 @@ export async function GET(req: NextRequest) {
         );
       }
 
+      console.log(title, date);
+      console.log(items);
       const normalizedTitle = title?.toLowerCase().trim().replace(/-/g, " ");
       const LANG_TAGS =
         /\[(tagalog|hindi|dubbed|multi|spanish|french|arabic|korean|japanese|tamil|telugu)\]/i;
@@ -193,11 +194,12 @@ export async function GET(req: NextRequest) {
 
       const selectedItem = items.find((item: any) => {
         const itemTitle = item.title?.toLowerCase().replace(/-/g, " ") || "";
-        const itemYear = item.releaseDate?.slice(0, 4);
+        const itemWords = itemTitle.split(/\s+/).filter(Boolean);
+        const itemReleaseDate = item.releaseDate;
         if (LANG_TAGS.test(itemTitle)) return false;
-        if (itemYear !== year) return false;
-
-        // Every word in the query must appear in the item title
+        if (itemReleaseDate?.slice(0, 7) !== date?.slice(0, 7)) return false;
+        if (queryWords.length <= 2 && itemWords.length !== queryWords.length)
+          return false;
         return queryWords.every((word) => itemTitle.includes(word));
       });
       if (!selectedItem) {
@@ -253,12 +255,16 @@ export async function GET(req: NextRequest) {
       // console.log(info);
       // Save to cache
       if (dubs.length > 0) {
-        await supabase
-          .from("moviebox_cache")
-          .upsert(
-            { tmdb_id: tmdbId, media_type: mediaType, dubs, year },
-            { onConflict: "tmdb_id,media_type", ignoreDuplicates: true },
-          );
+        await supabase.from("moviebox_cache").upsert(
+          {
+            tmdb_id: tmdbId,
+            media_type: mediaType,
+            dubs,
+            release_date: date,
+            title,
+          },
+          { onConflict: "tmdb_id,media_type", ignoreDuplicates: true },
+        );
       }
     }
 

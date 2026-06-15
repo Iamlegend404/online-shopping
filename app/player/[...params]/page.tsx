@@ -169,6 +169,7 @@ export default function Player() {
     imdbId,
     title,
     year,
+    date: String(date),
     enable: !allFailed,
     dub: dubLangApplied.current ? dub : (dubLang ?? dub),
   });

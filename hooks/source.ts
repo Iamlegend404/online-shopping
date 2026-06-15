@@ -36,6 +36,7 @@ interface UseSourceParams {
   server: string;
   title: string;
   year: string;
+  date: string;
   quality?: "4k" | null;
   dub: string;
   enable: boolean;
@@ -53,6 +54,7 @@ export default function useSource(
     server,
     title,
     year,
+    date,
     quality,
     dub,
     enable,
@@ -105,6 +107,7 @@ export default function useSource(
         imdbId,
         title,
         year,
+        date,
         dub,
         // quality,
         ts,
@@ -135,6 +138,7 @@ interface BuildSourceURLParams {
   imdbId: string | null;
   title: string;
   year: string;
+  date: string;
   ts: number;
   sig: string; // was: token
   xt: string; // was: f_token
@@ -154,6 +158,7 @@ function buildSourceURL({
   sig,
   xt,
   dub,
+  date,
 }: BuildSourceURLParams) {
   const params = new URLSearchParams({
     [FIELD_MAP.id]: String(tmdbId),
@@ -163,6 +168,7 @@ function buildSourceURL({
     [FIELD_MAP.fToken]: xt,
     [FIELD_MAP.title]: title,
     [FIELD_MAP.year]: year,
+    date: date,
   });
 
   if (media_type === "tv") {
