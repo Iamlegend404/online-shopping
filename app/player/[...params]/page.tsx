@@ -53,7 +53,6 @@ export default function Player() {
   const enableSaveProgress = searchParams.get("save_progress") !== "false"; // default true
   const enableLoadProgress = searchParams.get("load_progress") !== "false"; // default true
   const load = Number(searchParams.get("load")) || undefined; // default undefined
-  const isAutoSet = useRef(false);
 
   // ─── Local State ─────────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
@@ -82,8 +81,8 @@ export default function Player() {
   const brightness = useSettingsStore(
     (s) => s.values["Brightness"]?.id ?? "100%",
   );
-  const dub = useSettingsStore((s) => s.values["Audio Dub"]?.id ?? "");
-
+  const dub = useSettingsStore((s) => s.values["Audio Dub"]?.id ?? "auto");
+  const dubLangApplied = useRef(false);
   // ─── Servers ─────────────────────────────────────────────────────────────────
   const {
     handleCanPlay,
@@ -171,7 +170,7 @@ export default function Player() {
     title,
     year,
     enable: !allFailed,
-    dub: dubLang ?? dub,
+    dub: dubLangApplied.current ? dub : (dubLang ?? dub),
   });
 
   // ─── Subtitles ───────────────────────────────────────────────────────────────
@@ -187,8 +186,10 @@ export default function Player() {
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
     servers[serverIndex].status === "available"
-      ? (source?.links[Number(sourceQualityId)].link ?? null)
+      ? (source?.links[Number(sourceQualityId)]?.link ?? null)
       : null;
+
+  // console.log("server index:", serverIndex, " player src=", playerSrc);
 
   const srcType = source?.links?.[Number(sourceQualityId)]?.type ?? "";
 
@@ -256,15 +257,50 @@ export default function Player() {
       handleServerFail();
     }
   }, [source?.links, sourceError]);
-  useEffect(() => {
-    if (!source?.active) return;
-    isAutoSet.current = true;
-    useSettingsStore.getState().setValue("Audio Dub", {
-      display: source.active.langName,
-      id: source.active.langCode,
-    });
-  }, [source?.links]);
 
+  // useEffect(() => {
+  //   if (!source?.active) return;
+  //   useSettingsStore.getState().setValue("Audio Dub", {
+  //     display: source.active.langName,
+  //     id: source.active.langCode,
+  //   });
+  // }, [source?.links]);
+
+  useEffect(() => {
+    dubLangApplied.current = false;
+  }, [dubLang]);
+
+  useEffect(() => {
+    if (!dubLang || dubLangApplied.current) return;
+
+    const mappedDub =
+      source?.dubs?.find((f) => f.lang === dubLang)?.name || "Auto";
+
+    useSettingsStore.getState().setValue("Audio Dub", {
+      display: mappedDub,
+      id: mappedDub === "Auto" ? "auto" : dubLang,
+    });
+
+    if (mappedDub !== "Auto") dubLangApplied.current = true;
+  }, [dubLang, source?.dubs]);
+
+  useEffect(() => {
+    dubLangApplied.current = false;
+    if (!dubLang) {
+      useSettingsStore.getState().setValue("Audio Dub", {
+        display: "Auto",
+        id: "auto",
+      });
+      return;
+    }
+
+    const mappedDub =
+      source?.dubs?.find((f) => f.lang === dubLang)?.name || "Auto";
+    useSettingsStore.getState().setValue("Audio Dub", {
+      display: mappedDub,
+      id: mappedDub === "Auto" ? "auto" : dubLang,
+    });
+  }, [serverIndex]);
   useEffect(() => {
     if (!source?.links?.[0]?.resolution) return;
 
@@ -308,20 +344,11 @@ export default function Player() {
     handleQualityChange();
   }, [sourceQualityId]);
 
-  // useEffect(() => {
-  //   if (!dub) return;
-  //   handleMarkDub();
-  //   refetch();
-  // }, [dub]);
   useEffect(() => {
     if (!dub) return;
-    if (isAutoSet.current) {
-      isAutoSet.current = false;
-      return; // ← skip refetch on auto-set
-    }
     handleMarkDub();
-    refetch();
   }, [dub]);
+
   useEffect(() => {
     if (canNext && state.ended) {
       router.push(`/player/tv/${tmdbId}/${nextSeason}/${nextEpisode}`);

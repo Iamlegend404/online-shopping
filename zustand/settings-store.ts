@@ -53,6 +53,30 @@ export const useSettingsStore = create<SettingsStore>()(
           ),
         ),
       }),
+      merge: (persisted: any, current) => ({
+        ...current,
+        values: {
+          ...current.values, // defaults first
+          ...persisted.values, // persisted on top
+        },
+      }),
     },
   ),
 );
+
+// merge: (persisted: any, current) => ({
+//       ...current,
+//       values: {
+//         ...current.values, // defaults first
+//         ...persisted.values, // persisted on top
+//       },
+//     }),
+// Before fix:
+// defaults → { "Audio Dub": "Auto", "Aspect Ratio": "16:9", ... }
+// localStorage loads → { "Aspect Ratio": "16:9" }  ← replaces everything
+// result → "Audio Dub" is GONE
+
+// After fix:
+// defaults → { "Audio Dub": "Auto", "Aspect Ratio": "16:9", ... }
+// localStorage loads → { "Aspect Ratio": "16:9" }  ← merges on top
+// result → "Audio Dub": "Auto" SURVIVES, "Aspect Ratio": "16:9" from localStorage

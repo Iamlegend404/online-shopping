@@ -175,8 +175,8 @@ export async function GET(req: NextRequest) {
       const searchJson = await searchRes.json();
       const results = searchJson?.data?.data || searchJson?.data || searchJson;
       const items = results?.items || [];
-      console.log(title, year);
-      console.log("zzz", items);
+      // console.log(title, year);
+      // console.log("zzz", items);
       if (!items.length) {
         logRequest(404, "no search results");
         return NextResponse.json(
@@ -250,7 +250,7 @@ export async function GET(req: NextRequest) {
         ];
       }
 
-      console.log(info);
+      // console.log(info);
       // Save to cache
       if (dubs.length > 0) {
         await supabase
@@ -268,7 +268,7 @@ export async function GET(req: NextRequest) {
       dubs.find((d: any) => d.lanCode === "en") ??
       dubs[0];
 
-    console.log(original);
+    // console.log(original);
     if (!original) {
       logRequest(404, "no original dub entry");
       return NextResponse.json(
@@ -311,6 +311,7 @@ export async function GET(req: NextRequest) {
 
     const sourcesJson = await sourcesRes.json();
     const sources = sourcesJson?.data?.data || sourcesJson?.data || sourcesJson;
+    // console.log("asa", sources);
     const downloads = sources?.downloads || [];
     if (!downloads.length) {
       logRequest(404, "no download sources");

@@ -102,7 +102,8 @@ export default function Settings({
       dub:
         dubs.length > 1
           ? [
-              ...dubs.map((q, i) => ({
+              { id: "auto", display: "Auto" },
+              ...dubs.map((q) => ({
                 id: q.lang,
                 display: q.name,
               })),
@@ -179,7 +180,7 @@ export default function Settings({
           if (item.label === "Audio track")
             return dynamic.audioTracks.length > 0;
           if (item.label === "Download") return dynamic.downloads.length > 0;
-          if (item.label === "Audio Dub") return dynamic.downloads.length > 0;
+          if (item.label === "Audio Dub") return dynamic.dub.length > 0;
           return true;
         }),
     }));

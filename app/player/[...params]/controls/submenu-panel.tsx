@@ -12,6 +12,7 @@ type Props = {
 export function SubmenuPanel({ item, currentValue, onSelect, onBack }: Props) {
   // console.log("item", item);
   // console.log(currentValue, item.options);
+
   return (
     <div>
       <div className="flex items-center gap-2 lg:px-2 px-1.5 lg:py-3 py-1.5 border-b border-neutral-800">
