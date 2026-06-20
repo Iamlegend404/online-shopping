@@ -4,15 +4,15 @@ import { SALT } from "./salt";
 // 🔁 Rotate these constants every few weeks
 
 const FIELD_MAP = {
-  id: "mid", // was: zxczxc
-  fToken: "xt", // was: f_token
-  ts: "rt", // was: ts / gago
-  token: "sig", // was: putangnamo / token
-  title: "q", // was: f
-  year: "p", // was: g
-  season: "sx", // was: c
-  episode: "ex", // was: d
-  imdbId: "ref", // was: e
+  id: "rgrwsdsdfgwrwrwwr", // was: zxczxc
+  fToken: "xfgdfgdsffgrwgrwyjhkjt", // was: f_token
+  ts: "rdghhdghhfssft", // was: ts / gago
+  token: "ZDDVHJFGHYRHG", // was: putangnamo / token
+  title: "TUKTHFSSFGDGHJS", // was: f
+  year: "53653TRFG647GF", // was: g
+  season: "adkljfhdahfladhfjahfjlahfhfljkadfdf", // was: c
+  episode: "546745ygy46ytfgty", // was: d
+  imdbId: "564745ygtuy5yi75yuy", // was: e
 } as const;
 
 export { FIELD_MAP };
