@@ -25,6 +25,8 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAdStore } from "@/zustand/ad-store";
+import { useAdStore2 } from "@/zustand/ad-store2";
 
 type Tab = "overview" | "trailer" | "stream" | "download";
 
@@ -65,7 +67,7 @@ export default function MovieDetails() {
   const id = String(param.id);
   const { data } = useTmdbDetails(media_type, id);
   const isTv = media_type === "tv";
-  const [tab, setTab] = useState<Tab>("download");
+  const [tab, setTab] = useState<Tab>("overview");
   const [posterLoaded, setPosterLoaded] = useState(false);
   const [backdropLoaded, setBackdropLoaded] = useState(false);
 
@@ -124,12 +126,12 @@ export default function MovieDetails() {
   function imagePath(path: string | null | undefined, quality: string) {
     return path ? `https://image.tmdb.org/t/p/${quality}${path}` : undefined;
   }
-
+  const triggerAd = useAdStore2((state) => state.triggerAd);
   const backdropUrl = imagePath(backdrop, "original");
   const posterUrl = imagePath(poster, "w780");
   console.log(selectedDub);
   return (
-    <div className="min-h-screen bg-background ">
+    <div className="min-h-screen bg-background " onClick={triggerAd}>
       {/* Banner */}
 
       <div className="absolute inset-0 h-[60vh]">
