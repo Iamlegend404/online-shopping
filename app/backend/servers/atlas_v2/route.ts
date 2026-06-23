@@ -13,7 +13,9 @@ const supabase = createClient(
 const WORKER_URL = "https://main.jinluxuz.workers.dev";
 const WORKER_SECRET = "xk92mZpQ7vLw3nRt";
 // const FEBBOX_PLAYER_WORKER = "https://febbox3.jinluxusz.workers.dev";
-const FEBBOX_PLAYER_WORKER = "https://proxy.jerometecson0.workers.dev";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+const FEBBOX_PLAYER_WORKER = `${BASE_URL}/backend/servers/atlas_v2/febbox`;
 const MAX_FILE_SIZE_GB = 60;
 // const QUALITY_ORDER = ["1080p", "720p", "360p", "auto", "4k", "480p"];
 const QUALITY_ORDER = ["360p", "auto"];
