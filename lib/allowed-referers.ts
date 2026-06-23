@@ -1,5 +1,5 @@
 const ALLOWED_REFERERS = [
-  "http://localhost:3000/",
+  // "http://localhost:3000/",
   "https://zxcprime.site/",
   "https://www.zxcprime.site/",
   "https://zxcstream.xyz/",
@@ -9,10 +9,11 @@ const ALLOWED_REFERERS = [
   "https://cdn.zxcstream.xyz/",
   "https://www.zxcstream.xyz/",
   "https://v-production-ea9a.up.railway.app/",
+  "https://v-zxcstream-xyz.up.railway.app/",
 ];
 
 export const ALLOWED_ORIGINS = [
-  "http://localhost:3000",
+  // "http://localhost:3000",
   "https://zxcprime.site",
   "https://www.zxcprime.site",
   "https://zxcstream.xyz",
@@ -22,6 +23,7 @@ export const ALLOWED_ORIGINS = [
   "https://embed.zxcstream.xyz",
   "https://cdn.zxcstream.xyz",
   "https://v-production-ea9a.up.railway.app",
+  "https://v-zxcstream-xyz.up.railway.app",
 ];
 export function isValidReferer(referer: string): boolean {
   return ALLOWED_REFERERS.some((allowed) => referer.includes(allowed));
