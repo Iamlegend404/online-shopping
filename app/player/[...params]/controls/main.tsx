@@ -223,7 +223,7 @@ export default function MainControls({
           </span>
           <h1
             className={cn(
-              "md:text-3xl lg:text-4xl",
+              "md:text-2xl lg:text-4xl",
               "lg:mt-2 md:mt-1.5",
               "font-bold tracking-wide",
             )}
