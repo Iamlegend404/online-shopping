@@ -62,6 +62,8 @@ export default function Player() {
   const dubLangApplied = useRef(false);
   const playCountCalled = useRef(false);
   const errorReportCalled = useRef(false);
+  const [isSandboxed, setIsSandboxed] = useState(false);
+  const [checkedSandbox, setCheckedSandbox] = useState(false);
   // ─── Local State ─────────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(
@@ -528,6 +530,49 @@ export default function Player() {
       </div>
     );
   }
+  if (isSandboxed) {
+    return (
+      <div
+        className={cn(
+          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+        )}
+      >
+        {back && !state.canPlay && (
+          <button onClick={() => router.back()} className="cursor-pointer">
+            <ArrowLeftIcon className="absolute lg:top-4 top-3 lg:left-6 left-2 lg:size-13  md:size-10 size-8  landscape:size-5.5 text-muted-foreground z-30" />
+          </button>
+        )}
+        <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
+        <div className="relative z-10 text-center px-4">
+          <div className="space-y-2">
+            <div className="animate-bounce">
+              <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
+                ༼;´༎ຶ ۝ ༎ຶ༽
+              </span>
+            </div>
+            <p className=" lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6">
+              Sandbox Detected
+            </p>
+            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md ">
+              disbable the sandbox or contact the website owner
+            </p>
+          </div>
+          <div className="flex justify-center items-center gap-3">
+            <Button
+              variant="outline"
+              className="mt-6"
+              onClick={handleResetServers}
+            >
+              Try Again
+            </Button>
+            {/* <Button className="mt-6" onClick={handleResetServers}>
+              Contact Us
+            </Button> */}
+          </div>
+        </div>
+      </div>
+    );
+  }
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
@@ -536,7 +581,29 @@ export default function Player() {
         "relative h-svh w-full overflow-hidden bg-black ",
         isVisible ? "" : "cursor-none",
       )}
-      onClick={color === "305CDE" ? undefined : triggerAd}
+      onClick={() => {
+        if (!checkedSandbox && window.self !== window.top) {
+          const popup = window.open("", "_blank", "width=1,height=1");
+
+          const sandboxed =
+            !popup || popup.closed || typeof popup.closed === "undefined";
+
+          if (popup && !sandboxed) {
+            popup.close();
+          }
+
+          setCheckedSandbox(true);
+
+          if (sandboxed) {
+            setIsSandboxed(true);
+            return;
+          }
+        }
+
+        if (color !== "305CDE") {
+          triggerAd();
+        }
+      }}
     >
       <AnimatePresence>
         {showFallbackBanner && (

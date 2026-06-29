@@ -449,31 +449,6 @@ export default function MainControls({
             </div>
 
             <div className={cn("flex items-center md:gap-3 gap-6")}>
-              <button
-                onClick={function () {
-                  // Not inside an iframe
-                  if (window.self === window.top) {
-                    console.log("not inside the iframe"); // Not iframe
-                    return;
-                  }
-
-                  // Inside an iframe, test if popups are blocked
-                  var popup = window.open("", "_blank", "width=1,height=1");
-
-                  var sandboxed =
-                    !popup ||
-                    popup.closed ||
-                    typeof popup.closed === "undefined";
-
-                  console.log(sandboxed); // true = likely sandboxed, false = iframe without popup restriction
-
-                  if (popup && !sandboxed) {
-                    popup.close();
-                  }
-                }}
-              >
-                Check Sandbox
-              </button>
               <Settings
                 mergeSubtitles={mergeSubtitles}
                 quality={quality}
