@@ -569,6 +569,10 @@ export default function Player() {
               attribute or ask the website owner to remove the sandbox
               restrictions.
             </p>
+            <p className="text-xs lg:text-sm text-muted-foreground/80 italic">
+              This restriction is temporarily enabled to help reduce server load
+              and conserve resources.
+            </p>
           </div>
 
           {/* <div className="flex items-center gap-6 mt-6">
