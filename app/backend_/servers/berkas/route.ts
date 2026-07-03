@@ -43,7 +43,7 @@ async function getActiveProxies(proxies: string[]): Promise<string[]> {
 async function getHealthyWorker(): Promise<string | null> {
   const active = await getActiveProxies(PROXY_WORKERS);
   const candidates = shuffle(active);
-
+  if (!candidates.length) return null;
   for (const worker of candidates) {
     try {
       const res = await fetchWithTimeout(worker, { method: "HEAD" }, 3000);
@@ -60,6 +60,8 @@ async function getHealthyWorker(): Promise<string | null> {
 }
 // /workers/subdomain
 const PROXY_WORKERS = [
+  "https://zxcstream.berkas18.workers.dev/",
+  "https://zxcstream.berkas17.workers.dev/",
   "https://zxcstream.berkas16.workers.dev/",
   "https://zxcstream.berkas15.workers.dev/",
   "https://zxcstream.berkas14.workers.dev/",
