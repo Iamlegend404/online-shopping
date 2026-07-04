@@ -133,18 +133,25 @@ export default function Player() {
   const imdbId = metadata?.imdb_id || null;
   const movie_id = metadata?.id;
   const poster = metadata?.poster_path || null;
-  const backdrop =
-    metadata?.images?.backdrops?.find((f) => f.iso_639_1 === "en")?.file_path ||
-    metadata?.backdrop_path ||
-    null;
+  const backdropArray = metadata?.backdrop_paths || [];
+  const [backdropIndex, setBackdropIndex] = useState(0);
+
+  useEffect(() => {
+    if (!backdropArray.length) return;
+    setBackdropIndex(Math.floor(Math.random() * backdropArray.length));
+  }, [metadata?.id, serverIndex]);
+
+  const backdrop = backdropArray[backdropIndex] ?? null;
+
+  // const backdrop = backdropArray.length
+  //   ? backdropArray[Math.floor(Math.random() * backdropArray.length)]
+  //   : null;
   const title = metadata?.title || "";
   const date = metadata?.release_date;
   const year = date ? String(new Date(date).getFullYear()) : "";
   const genre = metadata?.genres?.[0]?.name ?? "N/A";
   const seasons = metadata?.seasons ?? [];
-  const logo = metadata?.images?.logos?.find(
-    (f) => f.iso_639_1 === "en",
-  )?.file_path;
+  const logo = metadata?.logo_paths[0] || null;
   useEffect(() => {
     window.parent.postMessage(
       {
@@ -345,7 +352,16 @@ export default function Player() {
   //   });
   //   setLoaded(false);
   // }, [serverIndex]);
+  // useEffect(() => {
+  //   if (backdropArray.length <= 1) return;
+  //   if (state.canPlay) return; // stop cycling once video is playing
 
+  //   const interval = setInterval(() => {
+  //     setBackdropIndex((prev) => (prev + 1) % backdropArray.length);
+  //   }, 3000);
+
+  //   return () => clearInterval(interval);
+  // }, [backdropArray.length, state.canPlay]);
   // dubLang effect
   useEffect(() => {
     if (!dubLang) return;
@@ -716,36 +732,28 @@ export default function Player() {
       </div>
 
       {/* Backdrop (shown while buffering) */}
-      <AnimatePresence>
-        {!state.canPlay && metadata?.backdrop_path && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+      <AnimatePresence mode="wait">
+        {!state.canPlay && backdrop && (
+          <motion.img
+            key={backdrop}
+            src={`https://image.tmdb.org/t/p/original/${backdrop}`}
+            alt=""
+            className="fixed inset-0 h-full w-full object-cover"
+            initial={{
+              opacity: 0,
+              filter: "grayscale(1) contrast(1.3) brightness(0.75)",
+            }}
+            animate={{
+              opacity: 1,
+              filter:
+                servers[serverIndex].status === "checking" ||
+                servers[serverIndex].status === "queue"
+                  ? "grayscale(1) contrast(1.3) brightness(0.75)"
+                  : "grayscale(0)",
+            }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7, ease: "easeInOut" }}
-            className={cn(
-              "fixed inset-0",
-              loaded ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <motion.img
-              src={`https://image.tmdb.org/t/p/original/${metadata?.backdrop_path}`}
-              alt=""
-              className="h-full w-full object-cover"
-              animate={{
-                filter:
-                  servers[serverIndex].status === "checking" ||
-                  servers[serverIndex].status === "queue"
-                    ? "grayscale(1) contrast(1.3) brightness(0.75)"
-                    : "grayscale(0)",
-              }}
-              transition={{
-                duration: 0.7,
-                ease: "easeInOut",
-              }}
-              onLoad={() => setLoaded(true)}
-            />
-          </motion.div>
+          />
         )}
       </AnimatePresence>
       {back && !state.canPlay && (
