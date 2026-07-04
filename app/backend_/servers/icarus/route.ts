@@ -500,7 +500,7 @@ export async function GET(req: NextRequest) {
       "https://proxy.icarus9.workers.dev/",
       "https://proxy.icarus8.workers.dev/",
       "https://proxy.icarus7.workers.dev/",
-      "https://proxy.icarus5.workers.dev/",
+
       "https://proxy.icarus4.workers.dev/",
       "https://proxy.icarus3.workers.dev/",
       //
