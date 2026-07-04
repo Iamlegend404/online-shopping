@@ -492,6 +492,9 @@ export async function GET(req: NextRequest) {
     } //Je@09185134757
     //Test155@zxcstream.xyz's Account
     const proxies = [
+      "https://sparkling-credit-c6b8.icarus02.workers.dev/",
+      "https://green-dawn-9241.icarus01.workers.dev/",
+
       "https://proxy.icarus14.workers.dev/",
       "https://proxy.icarus13.workers.dev/",
       "https://proxy.icarus12.workers.dev/",
