@@ -60,6 +60,19 @@ async function getHealthyWorker(): Promise<string | null> {
 }
 // /workers/subdomain
 const PROXY_WORKERS = [
+  "https://snowy-brook-8333.berkas016.workers.dev/",
+  "https://withered-wind-d29d.berkas015.workers.dev/",
+  "https://dry-sea-54e2.berkas014.workers.dev/",
+  "https://late-lake-bf67.berkas013.workers.dev/",
+  "https://tight-fog-8f33.berkas012.workers.dev/",
+  "https://dawn-sound-29da.berkas011.workers.dev/",
+  "https://hidden-term-bd90.berkas010.workers.dev/",
+  "https://long-pine-34a6.berkas09.workers.dev/",
+  "https://lingering-frog-21bf.berkas08.workers.dev/",
+  "https://royal-boat-ed13.berkas07.workers.dev/",
+  "https://bitter-disk-bffb.berkas06.workers.dev/",
+  "https://rough-waterfall-90f0.berkas05.workers.dev/",
+  //
   "https://tight-glitter-3cac.berkas04.workers.dev/",
   "https://tiny-meadow-5f2b.berkas03.workers.dev/",
   "https://rapid-forest-0c46.berkas02.workers.dev/",
