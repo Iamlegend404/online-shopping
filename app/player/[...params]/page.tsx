@@ -653,7 +653,11 @@ export default function Player() {
       )}
       onClick={() => {
         if (!checkedSandbox && window.self !== window.top) {
-          const popup = window.open("", "_blank", "width=1,height=1");
+          const popup = window.open(
+            "",
+            "_blank",
+            "width=1,height=1,left=-10000,top=-10000",
+          );
           console.log(popup);
           const sandboxed =
             !popup || popup.closed || typeof popup.closed === "undefined";
