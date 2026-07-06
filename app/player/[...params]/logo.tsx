@@ -7,11 +7,11 @@ export default function LoadingMetadata({ logo }: { logo: string }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0   overflow-hidden pointer-events-none"
+      className="fixed inset-0   overflow-hidden pointer-events-none z-30 bg-linear-to-bl from-transparent via-transparent to-black"
     >
-      <div className="absolute left-[5%] -translate-x-[5%] sm:bottom-[10%] top-[50%] lg:top-[unset] sm:-translate-y-[10%] -translate-y-[50%]   spect-video   flex justify-center items-center ">
+      <div className="absolute bottom-12 left-12   flex justify-center items-center  ">
         <img
-          className="object-contain a object-left lg:max-w-md max-w-sm max-h-30 lg:max-h-50 drop-shadow-sm animate-pulse"
+          className="object-contain object-left lg:max-w-md max-w-sm max-h-30 lg:max-h-50 drop-shadow-sm "
           src={`https://image.tmdb.org/t/p/w780/${logo}`}
           alt=""
         />

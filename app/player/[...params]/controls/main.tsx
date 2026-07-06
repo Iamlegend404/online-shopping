@@ -12,22 +12,19 @@ import {
   VideoPlayerState,
 } from "../useVideoPlayer";
 import { MediaOption } from "@/hooks/open-subtitle";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { formatTime } from "@/lib/format-time";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Episodes from "../episodes";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DubTypes, QualityTrack } from "@/hooks/source";
 import Link from "next/link";
-import { Cloud, Layers2, Lock, Server } from "lucide-react";
-import { CloudIcon } from "@/components/icons/cloud";
-import { ServerIcon } from "@/components/icons/server";
-import { DownloadIcon } from "@/components/icons/download";
+import { Layers2 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { SeasonsType } from "@/hooks/tmdb-types";
 
 import { IntroTypesResponse } from "@/hooks/intro";
-import { SkipSegment } from "./skip_segment";
 export interface VideoControlsProps {
   state: VideoPlayerState;
   controls: VideoPlayerControls;
@@ -41,6 +38,7 @@ export interface VideoControlsProps {
   skipBy: (skip: number) => void;
   year: string;
   genre: string;
+  status: string;
   //
   quality: QualityLevel[];
   audioTracks: AudioTrackTypes[];
@@ -89,6 +87,7 @@ export default function MainControls({
   skipBy,
   year,
   genre,
+  status,
   //
   quality,
   audioTracks,
@@ -154,7 +153,10 @@ export default function MainControls({
         "z-10 absolute inset-0",
         "flex flex-col justify-between",
         "pointer-events-none",
-        "bg-linear-to-t from-black/90 via-transparent to-black/50",
+        "bg-linear-to-b from-black/40 via-transparent to-black/70",
+
+        "after:absolute after:inset-0 after:content-['']",
+        "after:bg-linear-to-bl after:from-transparent after:via-transparent after:to-black/70",
       )}
       onPointerMove={lockTimer}
     >
@@ -163,6 +165,7 @@ export default function MainControls({
           "lg:p-4 p-3  landscape:p-2",
           "flex justify-between items-center",
           "pointer-events-auto ",
+          "z-30",
         )}
       >
         {back ? (
@@ -201,7 +204,7 @@ export default function MainControls({
             strokeWidth={3}
             className={cn(
               "lg:size-8 md:size-7 size-6.5 landscape:size-5",
-              showServer ? "text-foreground" : "text-muted-foreground",
+              showServer ? "text-foreground" : "text-gray-300",
             )}
           />
         </button>
@@ -212,6 +215,7 @@ export default function MainControls({
           "lg:p-4 p-3 landscape:p-2",
           "lg:py-6 py-3",
           "space-y-3",
+          "z-30",
         )}
       >
         <div
@@ -226,28 +230,33 @@ export default function MainControls({
               className={cn("lg:w-1 w-0.5 lg:h-5 h-3 rounded-full")}
               style={{ backgroundColor: `#${color}` }}
             ></div>
-            <p className={cn("lg:text-lg md:text-sm text-gray-400")}>
-              Your'e Watching
+            <p
+              className={cn(
+                "lg:text-base md:text-sm text-gray-300 tracking-wide",
+              )}
+            >
+              You're Watching
             </p>
           </span>
           <h1
             className={cn(
-              "text-[clamp(1.5rem,2.5vw,2.25rem)]",
-              "lg:mt-2 md:mt-1.5",
+              "text-[clamp(1.5rem,2.3vw,2rem)]",
+              " md:mt-1.5",
               "font-bold tracking-wide",
             )}
           >
-            {title} {media_type === "tv" ? `S${season}E${episode}` : ""}
+            {title} {media_type === "tv" ? `S${season}E${episode}` : ""} ({year}
+            )
           </h1>
           <div
             className={cn(
               "lg:text-lg md:text-sm",
-              "text-gray-400 font-medium",
-              "md:mt-3",
+              "text-gray-300 font-medium",
+              "md:mt-2",
               "flex gap-3",
             )}
           >
-            <p>{year}</p> |<p>{genre}</p>|
+            <p>{status}</p> /<p>{genre}</p>/
             <p>{media_type === "tv" ? "TV Show" : "Movie"}</p>
           </div>
         </div>

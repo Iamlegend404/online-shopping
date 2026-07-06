@@ -44,7 +44,7 @@ export default function Player() {
   const [showServer, setShowServer] = useState(true);
   const defaultServerIndex = Number(searchParams.get("server")) || 0;
   const domain = searchParams.get("domainAd") || "zxcstream.icu";
-  const color = searchParams.get("color") || "b91c1c";
+  const color = searchParams.get("color") || "e50914";
 
   const language = searchParams.get("language") || "en-US";
   const subLang = searchParams.get("subLang") || "off";
@@ -133,6 +133,7 @@ export default function Player() {
   const imdbId = metadata?.imdb_id || null;
   const movie_id = metadata?.id;
   const poster = metadata?.poster_path || null;
+  const status = metadata?.status || "";
   const backdropArray = metadata?.backdrop_paths || [];
   const [backdropIndex, setBackdropIndex] = useState(0);
 
@@ -907,6 +908,7 @@ export default function Player() {
             showServer={showServer}
             setShowServer={setShowServer}
             introData={introData}
+            status={status}
           />
         )}
       </AnimatePresence>
