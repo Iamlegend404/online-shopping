@@ -9,6 +9,14 @@ const supabase = createClient(
   process.env.SUPABASE_URL_MOVIEBOX!,
   process.env.SUPABASE_SERVICE_ROLE_KEY_MOVIEBOX!,
 );
+const supabaseSubtitle = createClient(
+  process.env.SUPABASE_URL_MOVIEBOX_SUBTITLE!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY_MOVIEBOX_SUBTITLE!,
+);
+
+let blacklistCache: Set<string> | null = null;
+let blacklistCacheTime = 0;
+const BLACKLIST_TTL = 60_000;
 async function getNext8AMPH(): Promise<string> {
   const now = new Date();
   const ph = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -19,21 +27,26 @@ async function getNext8AMPH(): Promise<string> {
   return new Date(now.getTime() + diff).toISOString();
 }
 async function blacklistProxy(proxy: string) {
-  await supabase
+  const expires_at = await getNext8AMPH();
+  void supabase
     .from("proxy_blacklist")
     .upsert(
-      { proxy, expires_at: await getNext8AMPH(), hit_count: 1 },
+      { proxy, expires_at, hit_count: 1 },
       { onConflict: "proxy", ignoreDuplicates: false },
     );
+  blacklistCache?.add(proxy);
   console.log(`[PROXY] ⛔ blacklisted ${proxy}`);
 }
 async function getActiveProxies(proxies: string[]): Promise<string[]> {
-  const { data } = await supabase
-    .from("proxy_blacklist")
-    .select("proxy")
-    .gt("expires_at", new Date().toISOString());
-  const blocked = new Set((data ?? []).map((r: any) => r.proxy));
-  return proxies.filter((p) => !blocked.has(p));
+  if (!blacklistCache || Date.now() - blacklistCacheTime > BLACKLIST_TTL) {
+    const { data } = await supabase
+      .from("proxy_blacklist")
+      .select("proxy")
+      .gt("expires_at", new Date().toISOString());
+    blacklistCache = new Set((data ?? []).map((r: any) => r.proxy));
+    blacklistCacheTime = Date.now();
+  }
+  return proxies.filter((p) => !blacklistCache!.has(p));
 }
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -89,10 +102,9 @@ export async function getWorkingProxy(url: string, proxies: string[]) {
   const activeProxies = await getActiveProxies(proxies);
   const shuffledProxies = shuffle(activeProxies);
   if (!shuffledProxies.length) return null;
-
+  const encrypted = await encryptUrl(url);
   for (const proxy of shuffledProxies) {
     try {
-      const encrypted = await encryptUrl(url);
       const res = await fetchWithTimeout(
         `${proxy}?data=${encodeURIComponent(encrypted)}`,
         { method: "HEAD", headers: { Range: "bytes=0-1" } },
@@ -328,7 +340,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (dubs.length > 0) {
-        await supabase.from("moviebox_cache").upsert(
+        void supabase.from("moviebox_cache").upsert(
           {
             tmdb_id: tmdbId,
             media_type: mediaType,
@@ -339,6 +351,8 @@ export async function GET(req: NextRequest) {
           { onConflict: "tmdb_id,media_type", ignoreDuplicates: true },
         );
       }
+
+      // save subtitles only, no read
     }
 
     // -------- Resolve active subjectId/detailPath from dubs --------
@@ -374,11 +388,11 @@ export async function GET(req: NextRequest) {
 
     // -------- Cache Lookup (downloads) --------
     let sortedDownloads: any[];
-    let subtitles: any[];
+    let subtitles: any[] = [];
 
     const dlQuery = supabase
       .from("moviebox_downloads_cache")
-      .select("downloads, subtitles")
+      .select("downloads")
       .eq("tmdb_id", tmdbId)
       .eq("media_type", mediaType)
       .eq("dub", activeDubLang)
@@ -395,7 +409,6 @@ export async function GET(req: NextRequest) {
     if (cachedDownloads) {
       console.log(`[ICARUS] downloads cache hit`);
       sortedDownloads = cachedDownloads.downloads ?? [];
-      subtitles = cachedDownloads.subtitles ?? [];
     } else {
       const params = new URLSearchParams({ subjectId, detailPath });
       if (mediaType === "tv") {
@@ -489,6 +502,21 @@ export async function GET(req: NextRequest) {
         display: c.lanName,
         file: c.url,
       }));
+      if (subtitles.length > 0) {
+        void supabaseSubtitle.from("moviebox_subtitles_cache").upsert(
+          {
+            tmdb_id: tmdbId,
+            media_type: mediaType,
+            season: season ?? "",
+            episode: episode ?? "",
+            subtitles,
+          },
+          {
+            onConflict: "tmdb_id,media_type,season,episode",
+            ignoreDuplicates: true,
+          },
+        );
+      }
     } //Je@09185134757
     //Test155@zxcstream.xyz's Account
     const proxies = [
@@ -499,85 +527,6 @@ export async function GET(req: NextRequest) {
       "https://dawn-violet-1bfc.icarus045.workers.dev/",
       "https://small-bonus-631a.icarus044.workers.dev/",
       "https://old-smoke-c852.icarus043.workers.dev/",
-      "https://late-meadow-f5cf.icarus042.workers.dev/",
-      "https://autumn-sky-7829.icarus041.workers.dev/",
-      "https://super-tree-8f2e.icarus040.workers.dev/",
-      "https://steep-sky-b7c6.icarus039.workers.dev/",
-      "https://patient-base-d281.icarus038.workers.dev/",
-      "https://sweet-frost-4413.icarus037.workers.dev/",
-      "https://wild-frost-90b0.icarus035.workers.dev/",
-      "https://frosty-term-80f0.icarus036.workers.dev/",
-      "https://misty-wildflower-f895.icarus034.workers.dev/",
-      "https://snowy-lab-9d5f.icarus033.workers.dev/",
-      "https://rough-pond-0449.icarus032.workers.dev/",
-      "https://weathered-mountain-aca0.icarus031.workers.dev/",
-      "https://fragrant-surf-698c.icarus030.workers.dev/",
-      "https://curly-snowflake-2593.icarus029.workers.dev/",
-      "https://calm-glitter-8377.icarus028.workers.dev/",
-      "https://withered-lab-a730.icarus027.workers.dev/",
-      "https://blue-flower-fe30.icarus026.workers.dev/",
-      "https://billowing-truth-c158.icarus025.workers.dev/",
-      "https://divine-sun-7d33.icarus024.workers.dev/",
-      "https://billowing-dream-d9ad.icarus023.workers.dev/",
-      "https://mute-flower-d701.icarus022.workers.dev/",
-      "https://dark-boat-61e0.icarus021.workers.dev/",
-      "https://billowing-bread-6c35.icarus019.workers.dev/",
-      "https://gentle-frost-0125.icarus018.workers.dev/",
-      "https://summer-poetry-a019.icarus017.workers.dev/",
-      "https://billowing-sea-003c.icarus016.workers.dev/",
-      "https://summer-poetry-0561.icarus015.workers.dev/",
-      "https://dawn-mud-4987.icarus014.workers.dev/",
-      "https://old-surf-c6eb.icarus012.workers.dev/",
-      "https://wandering-flower-cc32.icarus011.workers.dev/",
-      "https://small-recipe-9008.icarus09.workers.dev/",
-      "https://morning-haze-36e3.icarus08.workers.dev/",
-      "https://little-limit-e11e.icarus05.workers.dev/",
-      "https://ancient-limit-83f0.icarus03.workers.dev/",
-      "https://sparkling-credit-c6b8.icarus02.workers.dev/",
-      "https://green-dawn-9241.icarus01.workers.dev/",
-      "https://proxy.icarus14.workers.dev/",
-      "https://proxy.icarus13.workers.dev/",
-      "https://proxy.icarus12.workers.dev/",
-      "https://proxy.icarus11.workers.dev/",
-      "https://proxy.icarus10.workers.dev/",
-      "https://proxy.icarus9.workers.dev/",
-      "https://proxy.icarus8.workers.dev/",
-      "https://proxy.icarus7.workers.dev/",
-      "https://proxy.icarus3.workers.dev/",
-      "https://icarus.test155-123.workers.dev/",
-      "https://proxy.icarus1.workers.dev/",
-      "https://proxy.icarus2.workers.dev/",
-      "https://late-snowflake-5076.zxcprime362.workers.dev/",
-      "https://weathered-frost-60b0.zxcprime361.workers.dev/",
-      "https://icarus.test154-123.workers.dev/",
-      "https://icarus.test156-123.workers.dev/",
-      "https://icarus.test157-123.workers.dev/",
-      "https://icarus.test153-224.workers.dev/",
-      "https://icarus.test152-5d8.workers.dev/",
-      "https://icarus.test151-009.workers.dev/",
-      "https://icarus.test150-e8d.workers.dev/",
-      "https://proxy.zxcprime359-test1.workers.dev/",
-      "https://proxy.orbitprime27.workers.dev/",
-      "https://proxy.silverlantern64.workers.dev/",
-      "https://proxy.zxcprime380.workers.dev/",
-      "https://orange-tooth-0e36.zxcprime369.workers.dev/",
-      "https://silent-glitter-744f.zxcprime365.workers.dev/",
-      "https://nameless-feather-4fca.zxcprime364.workers.dev/",
-      "https://proxy.test4-eb0.workers.dev/",
-      "https://proxy.test3-ed1.workers.dev/",
-      "https://proxy.test2-425.workers.dev/",
-      "https://proxy.test1-845.workers.dev/",
-      "https://proxy.zxcprime.workers.dev/",
-      "https://proxy.zxcprime3.workers.dev/",
-      "https://proxy.zxcprime2.workers.dev/",
-      "https://orange-poetry-e481.jindaedalus2.workers.dev/",
-      "https://proxy.primezxc9.workers.dev/",
-      "https://sweet-dust-bdb3.vetenabejar.workers.dev/",
-      "https://long-frog-ec4e.coupdegrace21799.workers.dev/",
-      "https://damp-bonus-5625.mosangfour.workers.dev/",
-      "https://orange-paper-a80d.j61202287.workers.dev/",
-      "https://still-butterfly-9b3e.zxcprime360.workers.dev/",
-      "https://empty-pond-805b.zxcprime363.workers.dev/",
     ];
 
     const workingProxy = await getWorkingProxy(sortedDownloads[0].url, proxies);
@@ -590,7 +539,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!cachedDownloads) {
-      await supabase.from("moviebox_downloads_cache").upsert(
+      void supabase.from("moviebox_downloads_cache").upsert(
         {
           tmdb_id: tmdbId,
           media_type: mediaType,
@@ -599,7 +548,6 @@ export async function GET(req: NextRequest) {
           dub: activeDubLang,
           type: activeDubType,
           downloads: sortedDownloads,
-          subtitles,
           play_count: 0,
           expires_at: new Date(Date.now() + 1000 * 60 * 60 * 45).toISOString(),
           refreshed_at: new Date().toISOString(),

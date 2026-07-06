@@ -30,6 +30,7 @@ import { useTmdbDetails } from "@/hooks/fetch-details";
 import { useAdStore2 } from "@/zustand/ad-store2";
 import { useIntro } from "@/hooks/intro";
 import { SkipSegment } from "./controls/skip_segment";
+import useSubtitle from "@/hooks/subs";
 
 export default function Player() {
   // ─── URL Params ─────────────────────────────────────────────────────────────
@@ -204,6 +205,13 @@ export default function Player() {
     dubType: dub || dubLang ? (dub ? type : dubType) : "",
   });
 
+  const { data: subtitles = [], isLoading: subtitlesLoading } = useSubtitle({
+    tmdbId,
+    media_type,
+    season,
+    episode,
+    enable: !!tmdbId, // or tie it to source being loaded
+  });
   const { data: introData } = useIntro({
     imdbId,
     tmdbId,
@@ -219,7 +227,11 @@ export default function Player() {
     episode: media_type === "tv" ? episode : undefined,
   });
   const dubs = source?.dubs || [];
-  const mergeSubtitles = [...(source?.subtitles || []), ...openSubtitleData];
+  const mergeSubtitles = [
+    ...subtitles,
+    ...(source?.subtitles || []),
+    ...openSubtitleData,
+  ];
 
   const isAuto = sourceQualityId === "auto" ? "0" : sourceQualityId;
   // ─── Video Player ────────────────────────────────────────────────────────────
