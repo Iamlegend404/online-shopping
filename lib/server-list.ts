@@ -20,19 +20,18 @@ export const initialServers: ServerTypes[] = [
     status: "queue",
     desc: "Main Server & Multi Audio Support",
   },
-
   {
-    name: "Orion III",
+    name: "Daedalus IV",
+    server: "daedalus",
+    status: "queue",
+    desc: "K-Dramas, C-Dramas & Asian movies",
+  },
+  {
+    name: "Orion V",
     server: "orion",
     status: "queue",
     desc: "Built-In Subtitle",
   },
-  // {
-  //   name: "Daedalus IV",
-  //   server: "daedalus",
-  //   status: "queue",
-  //   desc: "K-Dramas, C-Dramas & Asian movies",
-  // },
 
   // {
   //   name: "Talos V",

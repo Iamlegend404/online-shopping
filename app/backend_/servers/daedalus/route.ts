@@ -143,9 +143,7 @@ async function fetchOneTouchStreams(
   const links = sources
     .map((s: any) => ({
       type: url.toLowerCase().includes(".m3u8") ? "hls" : "mp4",
-      link: `https://shy-cherry-5374.sentinel1-cda.workers.dev/?url=${encodeURIComponent(
-        s.file ?? s.url ?? s.src,
-      )}`,
+      link: `https://p.sentinel1-cda.workers.dev/?url=${s.file ?? s.url ?? s.src}`,
       resolution: parseInt(s.label ?? s.quality ?? "0") || 0,
     }))
     .filter((s: any) => s.link);
