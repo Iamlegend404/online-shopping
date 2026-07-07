@@ -1,172 +1,242 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateBackendToken } from "@/lib/validate-token";
 import { isValidReferer } from "@/lib/allowed-referers";
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { FIELD_MAP } from "@/lib/token";
-import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL_SENTINEL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY_SENTINEL!,
-);
+const ONETOUCH_API = "https://api3.devcorp.me/web/vod";
+const ENC_DEC_API = "https://enc-dec.app/api";
 
-const MEGACLOUD = "https://megacloudx.net";
+const HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+};
 
-async function fetchSource(url: string): Promise<{
-  hls: string;
-  tracks: object[];
-  embed_url: string;
-} | null> {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
-      Accept: "*/*",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Accept-Encoding": "gzip, deflate, br",
-      Origin: MEGACLOUD,
-      Referer: `${MEGACLOUD}/`,
-      "Sec-Fetch-Dest": "empty",
-      "Sec-Fetch-Mode": "cors",
-      "Sec-Fetch-Site": "cross-site",
-      "Sec-CH-UA":
-        '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
-      "Sec-CH-UA-Mobile": "?0",
-      "Sec-CH-UA-Platform": '"Windows"',
-      Priority: "u=1, i",
+async function fetchOneTouchStreams(
+  tmdbId: string,
+  mediaType: string,
+  season: string | null,
+  episode: string | null,
+  title: string,
+): Promise<{ links: any[]; subtitles: any[] }> {
+  // -----------------------------
+  // Search
+  // -----------------------------
+  const searchEncrypted = await fetchWithTimeout(
+    `https://api3.devcorp.me/vod/search?page=1&keyword=${encodeURIComponent(
+      title,
+    )}`,
+    {
+      headers: HEADERS,
     },
-    redirect: "follow",
-    cache: "no-store",
-  });
+    20000,
+  ).then((r) => r.text());
 
-  if (!res.ok) return null;
+  const searchDec = await fetchWithTimeout(
+    `${ENC_DEC_API}/dec-onetouchtv`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: searchEncrypted,
+      }),
+    },
+    15000,
+  ).then((r) => r.json());
 
-  const embed_url = res.url; // https://megacloudx.net/e/0114ig6p6pvy?sub.info=...
+  if (searchDec.status !== 200 || !searchDec.result) {
+    throw new Error(`Search decrypt failed: ${searchDec.error ?? "unknown"}`);
+  }
 
-  const html = await res.text();
+  // console.log("========== SEARCH RESULT ==========");
+  // console.dir(searchDec.result, { depth: null });
+  // console.log("==================================");
 
-  const hlsMatch = html.match(/var HLS\s*=\s*"([^"]+)"/);
-  const tracksMatch = html.match(/var TRACKS\s*=\s*(\[.*?\]);/);
+  const results = Array.isArray(searchDec.result) ? searchDec.result : [];
 
-  if (!hlsMatch) return null;
+  const normalizedTitle = title
+    .replace(/\s*\(\d{4}\)/g, "")
+    .trim()
+    .toLowerCase();
+
+  const wantedSeason = Number(season ?? "1");
+
+  const cleanTitle = (value: string) =>
+    value
+      .replace(/\s*Season\s+\d+.*/i, "")
+      .replace(/\s*\(\d{4}\)/g, "")
+      .trim()
+      .toLowerCase();
+
+  const match =
+    mediaType === "movie"
+      ? results.find(
+          (item: any) =>
+            item.type === "movie" && cleanTitle(item.title) === normalizedTitle,
+        )
+      : results.find((item: any) => {
+          if (cleanTitle(item.title) !== normalizedTitle) return false;
+
+          const m = item.title.match(/Season\s+(\d+)/i);
+
+          // No season in title = Season 1
+          if (!m) return wantedSeason === 1;
+
+          return Number(m[1]) === wantedSeason;
+        });
+  if (!match) {
+    throw new Error("No matching search result");
+  }
+  // console.log("MATCH:", match);
+  // console.log("MATCH:", match);
+
+  let url: string;
+
+  if (mediaType === "movie") {
+    url = `${ONETOUCH_API}/${match.id}/episode/1`;
+  } else {
+    url = `${ONETOUCH_API}/${match.id}/episode/${episode ?? 1}`;
+  }
+  // console.log("STREAM URL:", url);
+
+  const encrypted = await fetchWithTimeout(
+    url,
+    {
+      headers: HEADERS,
+    },
+    20000,
+  ).then((r) => r.text());
+
+  const dec = await fetchWithTimeout(
+    `${ENC_DEC_API}/dec-onetouchtv`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: encrypted,
+      }),
+    },
+    15000,
+  ).then((r) => r.json());
+
+  if (dec.status !== 200 || !dec.result) {
+    throw new Error(`dec-onetouchtv failed: ${dec.error ?? "unknown"}`);
+  }
+
+  const result = dec.result;
+
+  console.log("========== STREAM RESULT ==========");
+  console.dir(result, { depth: null });
+  console.log("==================================");
+
+  const sources =
+    result.sources ??
+    result.streams ??
+    result.stream ??
+    result.data?.sources ??
+    [];
+
+  const links = sources
+    .map((s: any) => ({
+      type: url.toLowerCase().includes(".m3u8") ? "hls" : "mp4",
+      link: `https://p.sentinel1-cda.workers.dev/?url=${s.file ?? s.url ?? s.src}`,
+      resolution: parseInt(s.label ?? s.quality ?? "0") || 0,
+    }))
+    .filter((s: any) => s.link);
+
+  const rawSubs =
+    result.track ??
+    result.subtitles ??
+    result.captions ??
+    result.tracks ??
+    result.data?.subtitles ??
+    [];
+
+  const subtitles = rawSubs
+    .filter((s: any) => s.kind !== "thumbnails")
+    .map((s: any) => ({
+      id: s.code ?? s.id,
+      display: s.name ?? s.label ?? s.language ?? "Unknown",
+      file: s.file ?? s.url,
+    }))
+    .filter((s: any) => s.file);
 
   return {
-    hls: hlsMatch[1],
-    tracks: tracksMatch ? JSON.parse(tracksMatch[1]) : [],
-    embed_url,
+    links,
+    subtitles,
   };
-}
-function formatTracks(tracks: any[]) {
-  return tracks.map((t) => ({ ...t, display: t.label }));
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const id = req.nextUrl.searchParams.get(FIELD_MAP.id);
-    const media_type = req.nextUrl.searchParams.get("b");
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
+    const mediaType = req.nextUrl.searchParams.get("b");
     const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
     const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
-    const imdbId = req.nextUrl.searchParams.get(FIELD_MAP.imdbId);
+    const title = req.nextUrl.searchParams.get(FIELD_MAP.title);
+    const year = req.nextUrl.searchParams.get(FIELD_MAP.year);
     const ts = Number(req.nextUrl.searchParams.get(FIELD_MAP.ts));
     const token = req.nextUrl.searchParams.get(FIELD_MAP.token)!;
     const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!;
 
-    if (!id || !media_type || !ts || !token) {
+    if (!tmdbId || !mediaType || !title || !year || !ts || !token)
       return NextResponse.json(
         { success: false, error: "need token" },
         { status: 404 },
       );
-    }
 
-    if (Date.now() - Number(ts) > 8000) {
+    if (Date.now() - ts > 8000)
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 403 },
       );
-    }
 
-    if (!validateBackendToken(id, f_token, ts, token)) {
+    if (!validateBackendToken(tmdbId, f_token, ts, token))
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 403 },
       );
-    }
 
-    const referer = req.headers.get("referer") || "";
-    if (!isValidReferer(referer)) {
+    if (!isValidReferer(req.headers.get("referer") || ""))
       return NextResponse.json(
         { success: false, error: "Forbidden" },
         { status: 403 },
       );
-    }
 
-    const seasonKey = season ?? "";
-    const episodeKey = episode ?? "";
-
-    // check cache
-    const { data: cached } = await supabase
-      .from("megacloud_source")
-      .select("hls, tracks")
-      .eq("media_type", media_type)
-      .eq("tmdb_id", id)
-      .eq("season", seasonKey)
-      .eq("episode", episodeKey)
-      .gt("expires_at", new Date().toISOString())
-      .maybeSingle();
-
-    if (cached) {
-      return NextResponse.json({
-        success: true,
-        links: [{ type: "hls", link: cached.hls }],
-        subtitles: formatTracks(cached.tracks),
-        cached: true,
-      });
-    }
-
-    // fetch fresh
-    const pageUrl =
-      media_type === "tv"
-        ? `${MEGACLOUD}/pl/${id}/${seasonKey}/${episodeKey}/`
-        : `${MEGACLOUD}/mv/${imdbId}/${id}/`;
-
-    const source = await fetchSource(pageUrl);
-
-    if (!source) {
-      return NextResponse.json(
-        { success: false, error: "Source not found" },
-        { status: 502 },
-      );
-    }
-
-    // cache it
-
-    await supabase.from("megacloud_source").upsert(
-      {
-        media_type,
-        tmdb_id: id,
-        imdb_id: imdbId ?? null,
-        season: seasonKey,
-        episode: episodeKey,
-        hls: source.hls,
-        tracks: source.tracks,
-        embed_url: source.embed_url,
-        expires_at: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        onConflict: "media_type,tmdb_id,season,episode",
-        ignoreDuplicates: false,
-      },
+    const { links, subtitles } = await fetchOneTouchStreams(
+      tmdbId,
+      mediaType,
+      season,
+      episode,
+      title,
     );
+
+    if (!links.length)
+      return NextResponse.json(
+        { success: false, error: "No streams found" },
+        { status: 404 },
+      );
 
     return NextResponse.json({
       success: true,
-      links: [{ type: "hls", link: source.hls }],
-      subtitles: formatTracks(source.tracks),
-      cached: false,
+      links,
+      subtitles,
     });
-  } catch {
+  } catch (err: any) {
+    console.error("API Error:", err);
+
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
+      {
+        success: false,
+        error: err.message ?? "Internal server error",
+      },
+      {
+        status: 500,
+      },
     );
   }
 }

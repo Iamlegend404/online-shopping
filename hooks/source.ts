@@ -22,12 +22,12 @@ export interface SourceTypes {
   subtitles: MediaOption[];
   dubs?: DubTypes[];
   active?: ActiveTypes;
-  fallback: boolean
+  fallback: boolean;
 }
 export interface ActiveTypes {
   langCode: string;
   langName: string;
-  langType: string
+  langType: string;
 }
 interface UseSourceParams {
   media_type: string;
@@ -79,7 +79,7 @@ export default function useSource(
       dubCode,
       dubType,
     ],
-    enabled: Boolean(tmdbId && imdbId && server === server) && enable, // ← blocks fetch while scrolling
+    enabled: enable, // ← blocks fetch while scrolling
     retry: false,
     staleTime: 1000 * 60 * 60, // 1 hour → no refetch for 1 hour
     gcTime: 1000 * 60 * 60, // 1 hour → garbage collect after 1 hour

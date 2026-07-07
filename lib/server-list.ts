@@ -21,8 +21,8 @@ export const initialServers: ServerTypes[] = [
     desc: "Main Server & Multi Audio Support",
   },
   {
-    name: "Daedalus IV",
-    server: "daedalus",
+    name: "Sentinel IV",
+    server: "sentinel",
     status: "queue",
     desc: "K-Dramas, C-Dramas & Asian movies",
   },

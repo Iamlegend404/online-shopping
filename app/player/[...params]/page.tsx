@@ -153,7 +153,7 @@ export default function Player() {
   const year = date ? String(new Date(date).getFullYear()) : "";
   const genre = metadata?.genres?.[0]?.name ?? "N/A";
   const seasons = metadata?.seasons ?? [];
-  const logo = metadata?.logo_paths[0] || null;
+  const logo = metadata?.logo_paths?.[0] ?? null;
   useEffect(() => {
     window.parent.postMessage(
       {
@@ -200,7 +200,7 @@ export default function Player() {
     title,
     year,
     date: String(date),
-    enable: !allFailed,
+    enable: !allFailed && !!tmdbId && !!metadata && !!title,
     dubCode: dub || dubLang,
     dubType: dub || dubLang ? (dub ? type : dubType) : "",
   });
