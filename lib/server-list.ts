@@ -9,30 +9,29 @@ export const initialServers: ServerTypes[] = [
   },
 
   {
-    name: "Berkas (NEW)",
+    name: "Berkas II",
     server: "berkas",
     status: "queue",
     desc: "4K Support ",
   },
+  {
+    name: "Athena III",
+    server: "athena",
+    status: "queue",
+    desc: "Main Server & Multi Audio Support",
+  },
 
   {
-    name: "Orion II",
+    name: "Orion III",
     server: "orion",
     status: "queue",
     desc: "Built-In Subtitle",
   },
-  {
-    name: "Daedalus IV",
-    server: "daedalus",
-    status: "queue",
-    desc: "Alternative",
-  },
-
   // {
-  //   name: "Athena III",
-  //   server: "athena",
+  //   name: "Daedalus IV",
+  //   server: "daedalus",
   //   status: "queue",
-  //   desc: "Main Server & Multi Audio Support",
+  //   desc: "K-Dramas, C-Dramas & Asian movies",
   // },
 
   // {
