@@ -13,6 +13,7 @@ const ALLOWED_REFERERS = [
   //
   "https://z.zxcstream.xyz/",
   "https://daedalus.zxcstream.xyz/",
+  "https://q.zxcstream.xyz/",
   "https://a.zxcstream.xyz/",
   "https://embed.zxcstream.xyz/",
   "https://cdn.zxcstream.xyz/",
@@ -33,6 +34,7 @@ export const ALLOWED_ORIGINS = [
   //
   "https://z.zxcstream.xyz",
   "https://daedalus.zxcstream.xyz",
+  "https://q.zxcstream.xyz",
   "https://a.zxcstream.xyz",
   "https://embed.zxcstream.xyz",
   "https://cdn.zxcstream.xyz",
