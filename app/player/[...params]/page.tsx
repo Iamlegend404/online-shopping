@@ -663,6 +663,7 @@ export default function Player() {
         isVisible ? "" : "cursor-none",
       )}
       onClick={() => {
+        // First click: only test the sandbox
         if (!checkedSandbox && window.self !== window.top) {
           const popup = window.open(
             "",
@@ -681,21 +682,20 @@ export default function Player() {
 
           if (sandboxed) {
             setIsSandboxed(true);
-            return;
           }
 
-          // Only runs after the popup test succeeds
-          if (color !== "305CDE") {
-            triggerAd();
-          }
-
+          // Stop here. Do NOT trigger the ad on this click.
           return;
         }
 
-        // Subsequent clicks
-        if (!isSandboxed && color !== "305CDE") {
-          triggerAd();
-        }
+        // If sandboxed, never show ads.
+        if (isSandboxed) return;
+
+        // Skip ads for this color.
+        if (color === "305CDE") return;
+
+        // Second click onwards.
+        triggerAd();
       }}
     >
       <AnimatePresence>
