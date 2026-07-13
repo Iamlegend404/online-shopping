@@ -251,25 +251,6 @@ const supabase = createClient(
 
 //https://holly-1.test83-291.workers.dev/ https://holly-1.test84-c55.workers.dev/ https://holly-1.test82-ac2.workers.dev/ https://holly-1.test81-eac.workers.dev/
 const HOLLY_WORKERS = [
-  // "test84-c55",
-  // "test83-291",
-  // "test82-ac2",
-  // "test81-eac",
-  // "test80-1f4",
-  // "test79-29a",
-  // "test78-564",
-  // "test77-a68",
-  // "test76-4e9",
-  // "test75-da4",
-  // "test74-635",
-  // "test73-bfb",
-  // "test72-165",
-  // "test71-dc9",
-  // "test70-ee3",
-  // "test69-5d6",
-  // "test68-6e8",
-  // "test67-989",
-  // "test65-8de",
 
 
 ////////////////////////////
@@ -314,7 +295,7 @@ const HOLLY_WORKERS = [
 //   "test87-466",
 //   "test88-779",
 //   "test85-3d8",
-//   "test92-0aa",
+
 // ];
 async function getWorkingWorkerUrl(
   urls: string[],
