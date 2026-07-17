@@ -71,11 +71,6 @@ const DEBOUNCE_MS = 600;
 
 type Tab = "custom" | "builtin";
 
-useAdsScript({
-  enabled: true,
-  platform: "profiton",
-});
-
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -252,7 +247,10 @@ export default function Home() {
     setType(newType);
     setId(DEFAULT_IDS[newType]);
   };
-
+  useAdsScript({
+    enabled: true,
+    platform: "profiton",
+  });
   return (
     <>
       <div>
