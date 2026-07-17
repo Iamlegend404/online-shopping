@@ -132,10 +132,7 @@ export default function Player() {
     language,
     !isLoading && !isSandboxed,
   );
-  console.log({
-    isLoading,
-    isSandboxed,
-  });
+
   const imdbId = metadata?.imdb_id || null;
   const movie_id = metadata?.id;
   const poster = metadata?.poster_path || null;
@@ -161,6 +158,7 @@ export default function Player() {
   const logo = metadata?.logo_paths?.[0] ?? null;
 
   // ─── Source ──────────────────────────────────────────────────────────────────
+  const metadataLoad = !!tmdbId && !!metadata && !!title;
   const {
     data: source,
     error: sourceError,
@@ -175,7 +173,7 @@ export default function Player() {
     title,
     year,
     date: String(date),
-    enable: !allFailed && !!tmdbId && !!metadata && !!title,
+    enable: !allFailed && metadataLoad,
     dubCode: dub || dubLang,
     dubType: dub || dubLang ? (dub ? type : dubType) : "",
   });
@@ -185,14 +183,14 @@ export default function Player() {
     media_type,
     season,
     episode,
-    enable: !!tmdbId, // or tie it to source being loaded
+    enable: metadataLoad, // or tie it to source being loaded
   });
   const { data: introData } = useIntro({
     imdbId,
     tmdbId,
     season,
     episode,
-    enabled: media_type === "tv",
+    enabled: media_type === "tv" && metadataLoad,
   });
 
   // ─── Subtitles ───────────────────────────────────────────────────────────────
@@ -200,6 +198,7 @@ export default function Player() {
     imdbId,
     season: media_type === "tv" ? season : undefined,
     episode: media_type === "tv" ? episode : undefined,
+    enabled: metadataLoad,
   });
   const dubs = source?.dubs || [];
   const mergeSubtitles = [
@@ -461,7 +460,7 @@ export default function Player() {
     window.self !== window.top &&
     document.referrer.includes("xullys.xyz");
   useAdsScript({
-    enabled: !(isPartner || meow),
+    enabled: !isPartner && metadataLoad,
     platform: "profiton",
   });
 
@@ -508,78 +507,8 @@ export default function Player() {
       },
     },
   );
-
-  // ─── Error State ──────────────────────────────────────────────────────────────
-  if (metadataError) {
-    return (
-      <div
-        className={cn(
-          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
-        )}
-      >
-        <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
-        <div className="relative z-10 text-center px-4">
-          <div className="space-y-2">
-            <p className="text-muted-foreground lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold">
-              No resources found
-            </p>
-            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md">
-              Nothing to stream here. The resource you're looking for doesn't
-              exist or has been removed.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="mt-8 landscape:text-xs landscape:px-2 landscape:py-1"
-          >
-            <ArrowLeft /> Go back
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  if (allFailed) {
-    return (
-      <div
-        className={cn(
-          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
-        )}
-      >
-        {back && !playback.canPlay && (
-          <button onClick={() => router.back()} className="cursor-pointer">
-            <ArrowLeftIcon className="absolute lg:top-4 top-3 lg:left-6 left-2 lg:size-13  md:size-10 size-8  landscape:size-5.5 text-muted-foreground z-30" />
-          </button>
-        )}
-        <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
-        <div className="relative z-10 text-center px-4">
-          <div className="space-y-2">
-            <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
-              ༼;´༎ຶ ۝ ༎ຶ༽
-            </span>
-            <p className=" lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6">
-              All servers failed
-            </p>
-            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md">
-              The content may not be available yet, or the servers are currently
-              failing.
-            </p>
-          </div>
-          <div className="flex justify-center items-center gap-3">
-            <Button
-              variant="outline"
-              className="mt-6"
-              onClick={handleResetServers}
-            >
-              Try Again
-            </Button>
-            {/* <Button className="mt-6" onClick={handleResetServers}>
-              Contact Us
-            </Button> */}
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return null;
   }
   if (isSandboxed) {
     return (
@@ -652,6 +581,78 @@ export default function Player() {
       </div>
     );
   }
+  if (metadataError) {
+    return (
+      <div
+        className={cn(
+          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+        )}
+      >
+        <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
+        <div className="relative z-10 text-center px-4">
+          <div className="space-y-2">
+            <p className="text-muted-foreground lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold">
+              No resources found
+            </p>
+            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md">
+              Nothing to stream here. The resource you're looking for doesn't
+              exist or has been removed.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="mt-8 landscape:text-xs landscape:px-2 landscape:py-1"
+          >
+            <ArrowLeft /> Go back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  if (allFailed) {
+    return (
+      <div
+        className={cn(
+          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+        )}
+      >
+        {back && !playback.canPlay && (
+          <button onClick={() => router.back()} className="cursor-pointer">
+            <ArrowLeftIcon className="absolute lg:top-4 top-3 lg:left-6 left-2 lg:size-13  md:size-10 size-8  landscape:size-5.5 text-muted-foreground z-30" />
+          </button>
+        )}
+        <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
+        <div className="relative z-10 text-center px-4">
+          <div className="space-y-2">
+            <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
+              ༼;´༎ຶ ۝ ༎ຶ༽
+            </span>
+            <p className=" lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6">
+              All servers failed
+            </p>
+            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md">
+              The content may not be available yet, or the servers are currently
+              failing.
+            </p>
+          </div>
+          <div className="flex justify-center items-center gap-3">
+            <Button
+              variant="outline"
+              className="mt-6"
+              onClick={handleResetServers}
+            >
+              Try Again
+            </Button>
+            {/* <Button className="mt-6" onClick={handleResetServers}>
+              Contact Us
+            </Button> */}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
