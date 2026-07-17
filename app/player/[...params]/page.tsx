@@ -48,14 +48,12 @@ export default function Player() {
   const defaultServerIndex = Number(searchParams.get("server")) || 0;
   const domain = searchParams.get("domainAd") || "zxcstream.icu";
   const color = searchParams.get("color") || "e50914";
-
   const language = searchParams.get("language") || "en-US";
   const meow = searchParams.get("meow") === "true";
   const subLang = searchParams.get("subLang") || "off";
   const back = searchParams.get("back") === "true";
   const dubLang =
     searchParams.get("dubLang") || searchParams.get("dublang") || "";
-
   const dubType =
     searchParams.get("dubType") || searchParams.get("dubtype") || "0";
   const [showFallbackBanner, setShowFallbackBanner] = useState(false);
@@ -77,7 +75,7 @@ export default function Player() {
   const [loaded, setLoaded] = useState(false);
 
   // ─── Settings ────────────────────────────────────────────────────────────────
-  const { triggerAd, registerAd } = useAdStore2();
+  const { triggerAd } = useAdStore2();
   const aspectRatio = useSettingsStore(
     (s) => s.values["Aspect Ratio"]?.id ?? "16:9",
   );
@@ -187,12 +185,7 @@ export default function Player() {
     poster,
     backdrop,
   ]);
-  useEffect(() => {
-    if (window.self === window.top) return;
 
-    const referrer = document.referrer;
-    console.log(referrer);
-  }, []);
   // ─── Source ──────────────────────────────────────────────────────────────────
   const {
     data: source,
@@ -475,8 +468,13 @@ export default function Player() {
     });
   }, [mergeSubtitles.length]);
 
+  const isPartner =
+    typeof document !== "undefined" &&
+    window.self !== window.top &&
+    document.referrer.includes("xullys.xyz");
+
   useAdsScript({
-    enabled: !(color === "305CDE" || meow || isSandboxed),
+    enabled: !(isPartner || meow),
     platform: "profiton",
   });
   useKeyboardControls({ controls, setDoubleTapSide });
@@ -732,6 +730,7 @@ export default function Player() {
       //     return;
       //   }
       // }}
+      onClick={isPartner ? triggerAd : undefined}
     >
       <AnimatePresence>
         {showFallbackBanner && (
