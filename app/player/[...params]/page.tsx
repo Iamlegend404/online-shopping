@@ -66,6 +66,7 @@ export default function Player() {
   const playCountCalled = useRef(false);
   const errorReportCalled = useRef(false);
 
+  const isSandboxed = useSandboxDetection();
   // ─── Local State ─────────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(
@@ -98,7 +99,7 @@ export default function Player() {
   );
   // derive after
   const type = dub === "" ? "" : initialType;
-  const { isSandboxed, isLoaded, isEmbedded } = useSandboxDetection();
+
   // ─── Servers ─────────────────────────────────────────────────────────────────
   const {
     handleCanPlay,
@@ -132,6 +133,8 @@ export default function Player() {
   );
 
   const imdbId = metadata?.imdb_id || null;
+  const movie_id = metadata?.id;
+  const poster = metadata?.poster_path || null;
   const status = metadata?.status || "";
   const backdropArray = metadata?.backdrop_paths || [];
   const [backdropIndex, setBackdropIndex] = useState(0);
@@ -142,6 +145,10 @@ export default function Player() {
   }, [metadata?.id, serverIndex]);
 
   const backdrop = backdropArray[backdropIndex] ?? null;
+
+  // const backdrop = backdropArray.length
+  //   ? backdropArray[Math.floor(Math.random() * backdropArray.length)]
+  //   : null;
   const title = metadata?.title || "";
   const date = metadata?.release_date;
   const year = date ? String(new Date(date).getFullYear()) : "";
@@ -164,12 +171,7 @@ export default function Player() {
     title,
     year,
     date: String(date),
-    enable:
-      (!isEmbedded || isLoaded) &&
-      !allFailed &&
-      !!tmdbId &&
-      !!metadata &&
-      !!title,
+    enable: !allFailed && !!tmdbId && !!metadata && !!title,
     dubCode: dub || dubLang,
     dubType: dub || dubLang ? (dub ? type : dubType) : "",
   });
@@ -179,14 +181,14 @@ export default function Player() {
     media_type,
     season,
     episode,
-    enable: !!tmdbId && (!isEmbedded || isLoaded), // or tie it to source being loaded
+    enable: !!tmdbId, // or tie it to source being loaded
   });
   const { data: introData } = useIntro({
     imdbId,
     tmdbId,
     season,
     episode,
-    enabled: media_type === "tv" && (!isEmbedded || isLoaded),
+    enabled: media_type === "tv",
   });
 
   // ─── Subtitles ───────────────────────────────────────────────────────────────
@@ -194,7 +196,6 @@ export default function Player() {
     imdbId,
     season: media_type === "tv" ? season : undefined,
     episode: media_type === "tv" ? episode : undefined,
-    enabled: !isEmbedded || isLoaded,
   });
   const dubs = source?.dubs || [];
   const mergeSubtitles = [
@@ -247,7 +248,7 @@ export default function Player() {
     useHiddenOverlay(timer);
 
   useEffect(() => {
-    if (!isEmbedded) return;
+    if (window.self === window.top) return;
 
     window.parent.postMessage(
       {
@@ -258,7 +259,7 @@ export default function Player() {
       },
       "*",
     );
-  }, [isVisible, isEmbedded]);
+  }, [isVisible]);
 
   // ─── Next Episode ────────────────────────────────────────────────────────────
   const allSeason = metadata?.seasons?.length ?? 0;
@@ -453,10 +454,10 @@ export default function Player() {
 
   const isPartner =
     typeof document !== "undefined" &&
-    isEmbedded &&
+    window.self !== window.top &&
     document.referrer.includes("xullys.xyz");
   useAdsScript({
-    enabled: !(isPartner || meow) && (!isEmbedded || isLoaded),
+    enabled: !(isPartner || meow),
     platform: "profiton",
   });
 
@@ -503,15 +504,9 @@ export default function Player() {
       },
     },
   );
-  if (!isLoaded) {
-    return (
-      <div className="h-screen flex justify-center items-center bg-background">
-        <Tailspin size="40" stroke="6" speed="0.9" color="white" />
-      </div>
-    );
-  }
+
+  // ─── Error State ──────────────────────────────────────────────────────────────
   if (metadataError) {
-    // ─── Error State ──────────────────────────────────────────────────────────────
     return (
       <div
         className={cn(

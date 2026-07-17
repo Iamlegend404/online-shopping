@@ -3,18 +3,18 @@
 
 import { useEffect, useState } from "react";
 
+/**
+ * Detects whether the page is running inside a restrictive iframe sandbox
+ * (e.g. missing allow-same-origin), which breaks things like document.domain
+ * assignment and PDF plugin object embeds.
+ *
+ * Only runs the check when embedded in an iframe (window.self !== window.top).
+ */
 export function useSandboxDetection() {
-  const [isEmbedded] = useState(
-    () => typeof window !== "undefined" && window.self !== window.top,
-  );
   const [isSandboxed, setIsSandboxed] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(() => !isEmbedded);
 
   useEffect(() => {
-    if (!isEmbedded) {
-      setIsLoaded(true);
-      return;
-    }
+    if (window.self === window.top) return;
 
     let sandboxed = false;
 
@@ -28,7 +28,6 @@ export function useSandboxDetection() {
 
     if (sandboxed) {
       setIsSandboxed(true);
-      setIsLoaded(true);
       return;
     }
 
@@ -39,24 +38,18 @@ export function useSandboxDetection() {
         obj.style.display = "none";
 
         obj.onload = () => {
-          setIsLoaded(true);
           obj.remove();
         };
 
         obj.onerror = () => {
           setIsSandboxed(true);
-          setIsLoaded(true);
           obj.remove();
         };
 
         document.body.appendChild(obj);
-      } else {
-        setIsLoaded(true);
       }
-    } catch {
-      setIsLoaded(true);
-    }
-  }, [isEmbedded]);
+    } catch {}
+  }, []);
 
-  return { isSandboxed, isLoaded, isEmbedded };
+  return isSandboxed;
 }
