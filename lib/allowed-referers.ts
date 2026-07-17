@@ -29,6 +29,7 @@ const ALLOWED_REFERERS = [
   "https://r5.zxcstream.xyz/",
   "https://test.zxcstream.xyz/",
   "https://v1-zxcstream-xyz.up.railway.app/",
+  "http://online-shopping.zxcstream.xyz/",
 ];
 
 export const ALLOWED_ORIGINS = [
@@ -61,6 +62,7 @@ export const ALLOWED_ORIGINS = [
   "https://r5.zxcstream.xyz",
   "https://test.zxcstream.xyz",
   "https://v1-zxcstream-xyz.up.railway.app",
+  "http://online-shopping.zxcstream.xyz",
 ];
 export function isValidReferer(referer: string): boolean {
   return ALLOWED_REFERERS.some((allowed) => referer.includes(allowed));
