@@ -65,14 +65,12 @@ export default function Player() {
   const playCountCalled = useRef(false);
   const errorReportCalled = useRef(false);
   const [isSandboxed, setIsSandboxed] = useState(false);
-  const [checkedSandbox, setCheckedSandbox] = useState(false);
   // ─── Local State ─────────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(
     null,
   );
   const [cCToggle, setCcToggle] = useState(true);
-  const [loaded, setLoaded] = useState(false);
 
   // ─── Settings ────────────────────────────────────────────────────────────────
   const { triggerAd } = useAdStore2();
@@ -456,11 +454,11 @@ export default function Player() {
     typeof document !== "undefined" &&
     window.self !== window.top &&
     document.referrer.includes("xullys.xyz");
-  console.log();
   useAdsScript({
     enabled: !(isPartner || meow),
     platform: "profiton",
   });
+
   useEffect(() => {
     if (window.self === window.top) return;
 
@@ -474,28 +472,29 @@ export default function Player() {
       }
     }
 
-    if (!sandboxed) {
-      try {
-        if (navigator.plugins.namedItem("Chrome PDF Viewer")) {
-          const obj = document.createElement("object");
-          obj.data = "data:application/pdf;base64,aG1t";
-
-          obj.onload = () => {
-            console.log("Not sandboxed");
-            obj.remove();
-          };
-
-          obj.onerror = () => {
-            console.log("Sandboxed (PDF)");
-            obj.remove();
-          };
-
-          document.body.appendChild(obj);
-        }
-      } catch {}
-    } else {
-      console.log("Sandboxed (document.domain)");
+    if (sandboxed) {
+      setIsSandboxed(true);
+      return;
     }
+
+    try {
+      if (navigator.plugins.namedItem("Chrome PDF Viewer")) {
+        const obj = document.createElement("object");
+        obj.data = "data:application/pdf;base64,aG1t";
+        obj.style.display = "none";
+
+        obj.onload = () => {
+          obj.remove();
+        };
+
+        obj.onerror = () => {
+          setIsSandboxed(true);
+          obj.remove();
+        };
+
+        document.body.appendChild(obj);
+      }
+    } catch {}
   }, []);
   useKeyboardControls({ controls, setDoubleTapSide });
   // useEffect(() => {
