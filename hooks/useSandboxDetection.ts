@@ -1,56 +1,56 @@
+// hooks/useSandboxDetection.ts
 "use client";
 
 import { useEffect, useState } from "react";
 
+/**
+ * Detects whether the page is running inside a restrictive iframe sandbox
+ * (e.g. missing allow-same-origin), which breaks things like document.domain
+ * assignment and PDF plugin object embeds.
+ *
+ * Only runs the check when embedded in an iframe (window.self !== window.top).
+ */
 export function useSandboxDetection() {
   const [isSandboxed, setIsSandboxed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [isLoading, setIsloading] = useState(true);
   useEffect(() => {
-    // Not embedded = definitely not sandboxed
-    if (window.self === window.top) {
-      setIsLoading(false);
-      return;
-    }
+    if (window.self === window.top) return;
+    setIsloading(true);
+    let sandboxed = false;
 
     try {
       document.domain = document.domain;
     } catch (err) {
       if (err instanceof DOMException && err.name === "SecurityError") {
-        setIsSandboxed(true);
-        setIsLoading(false);
-        return;
+        sandboxed = true;
       }
     }
 
-    // Browser doesn't support the PDF test
-    if (!navigator.plugins.namedItem("Chrome PDF Viewer")) {
-      setIsLoading(false);
+    if (sandboxed) {
+      setIsSandboxed(true);
+      setIsloading(false);
       return;
     }
 
-    const obj = document.createElement("object");
-    obj.data = "data:application/pdf;base64,aG1t";
-    obj.style.display = "none";
+    try {
+      if (navigator.plugins.namedItem("Chrome PDF Viewer")) {
+        const obj = document.createElement("object");
+        obj.data = "data:application/pdf;base64,aG1t";
+        obj.style.display = "none";
 
-    obj.onload = () => {
-      obj.remove();
-      setIsLoading(false);
-    };
+        obj.onload = () => {
+          obj.remove();
+        };
 
-    obj.onerror = () => {
-      obj.remove();
-      setIsSandboxed(true);
-      setIsLoading(false);
-    };
+        obj.onerror = () => {
+          setIsSandboxed(true);
+          obj.remove();
+        };
 
-    document.body.appendChild(obj);
-
-    return () => obj.remove();
+        document.body.appendChild(obj);
+      }
+    } catch {}
   }, []);
 
-  return {
-    isSandboxed,
-    isLoading,
-  };
+  return isSandboxed;
 }
