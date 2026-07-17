@@ -132,7 +132,10 @@ export default function Player() {
     language,
     !isLoading && !isSandboxed,
   );
-
+  console.log({
+    isLoading,
+    isSandboxed,
+  });
   const imdbId = metadata?.imdb_id || null;
   const movie_id = metadata?.id;
   const poster = metadata?.poster_path || null;
