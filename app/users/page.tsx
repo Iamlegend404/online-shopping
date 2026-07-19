@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 type SortKey =
@@ -40,6 +41,12 @@ const columns: { key: SortKey; label: string }[] = [
   { key: "last_seen", label: "Last seen" },
   { key: "status", label: "Status" },
 ];
+
+// const NEW_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+const NEW_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+function isRecentlyAdded(createdAt: string) {
+  return Date.now() - new Date(createdAt).getTime() < NEW_THRESHOLD_MS;
+}
 
 export default function EmbeddersTable() {
   const { data, isLoading, isError } = useEmbedders();
@@ -193,28 +200,33 @@ export default function EmbeddersTable() {
             <TableRow key={e.id}>
               <TableCell>{e.embed}</TableCell>
               <TableCell>
-                {e.embedder.includes("https://") ? (
-                  <Link
-                    href={e.embedder}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline flex items-center gap-1.5"
-                  >
-                    {e.embedder}
-                    <ExternalLink className="size-3.5" />
-                  </Link>
-                ) : e.embedder.includes("http://") ? (
-                  <Link
-                    href={e.embedder}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-red-500 hover:underline"
-                  >
-                    {e.embedder}
-                  </Link>
-                ) : (
-                  <h1 className="text-gray-400 ">{e.embedder}</h1>
-                )}
+                <div className="flex items-center gap-2">
+                  {e.embedder.includes("https://") ? (
+                    <Link
+                      href={e.embedder}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline flex items-center gap-1.5"
+                    >
+                      {e.embedder}
+                      <ExternalLink className="size-3.5" />
+                    </Link>
+                  ) : e.embedder.includes("http://") ? (
+                    <Link
+                      href={e.embedder}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-red-500 hover:underline"
+                    >
+                      {e.embedder}
+                    </Link>
+                  ) : (
+                    <h1 className="text-gray-400 ">{e.embedder}</h1>
+                  )}
+                  {isRecentlyAdded(e.created_at) && (
+                    <Badge variant="outline">New</Badge>
+                  )}
+                </div>
               </TableCell>
               <TableCell>{e.sandbox ? "Yes" : "No"}</TableCell>
               <TableCell>{e.load_count}</TableCell>
