@@ -562,15 +562,15 @@ export default function Player() {
     "restricted",
     restricted,
     "restrictionActive",
-    restrictionActive,
+    !restrictionActive,
     "isSandboxed",
     isSandboxed,
   );
-  console.log(restricted && restrictionActive && isSandboxed);
+  console.log(restricted && !restrictionActive && isSandboxed);
   if (isLoading) {
     return null;
   }
-  if (restricted && restrictionActive && isSandboxed) {
+  if (restricted && !restrictionActive && isSandboxed) {
     return (
       <div
         className={cn(
