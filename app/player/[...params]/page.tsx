@@ -34,6 +34,7 @@ import useSubtitle from "@/hooks/subs";
 import { useAdsScript } from "@/hooks/useAdsScript";
 import { useSandboxDetection } from "@/hooks/useSandboxDetection";
 import { useTrackEmbedder } from "@/hooks/useTrackEmbedder";
+import Link from "next/link";
 
 export default function Player() {
   // ─── URL Params ─────────────────────────────────────────────────────────────
@@ -553,7 +554,7 @@ export default function Player() {
     return (
       <div
         className={cn(
-          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+          " h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
         )}
       >
         {back && !playback.canPlay && (
@@ -592,6 +593,18 @@ export default function Player() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="absolute md:bottom-4 bottom-2 text-center md:text-sm text-xs  text-muted-foreground">
+          If you're the website owner, join us on{" "}
+          <Link
+            href="https://discord.gg/yv7wJV97Jd"
+            target="_blank"
+            className="text-blue-400 underline hover:text-blue-300"
+          >
+            Discord
+          </Link>
+          .
         </div>
       </div>
     );
