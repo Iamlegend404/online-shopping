@@ -23,7 +23,7 @@ export function useAdsScript({ enabled, platform }: UseAdsScriptProps) {
           "https://injusticebakery.com/5c/15/e7/5c15e7185944758aafe9b32aa87f5279.js";
       } else {
         script = document.createElement("script");
-        script.src = "//fp.caligoatabals.com/rN5gaF9kjWFkD7SVQ/146575";
+        script.src = "//em.barresrelists.com/ryrcYDpZjtng/oLqVX";
         script.setAttribute("data-cfasync", "false");
       }
     } else if (host === "zxcprime.xyz" || host.endsWith(".zxcprime.xyz")) {

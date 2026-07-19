@@ -462,7 +462,7 @@ export default function Player() {
   console.log("partner", !!isPartner);
   useAdsScript({
     enabled: !isPartner && metadataLoad,
-    platform: "adsterra",
+    platform: "profiton",
   });
 
   useKeyboardControls({ controls, setDoubleTapSide });
