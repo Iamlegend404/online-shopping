@@ -376,7 +376,7 @@ export default function Player() {
       embedder: new URL(referrer).origin,
       sandbox: isSandboxed,
     });
-  }, [isSandboxed, trackEmbedder]);
+  }, [isSandboxed, trackEmbedder, isLoading]);
 
   // useEffect(() => {
   //   dubLangApplied.current = false;
