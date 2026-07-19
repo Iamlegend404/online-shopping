@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export function useSandboxDetection(enabled = false) {
+export function useSandboxDetection(enabled = true) {
   const [isSandboxed, setIsSandboxed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
