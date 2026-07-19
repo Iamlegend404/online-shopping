@@ -67,8 +67,15 @@ export default function Player() {
   const playCountCalled = useRef(false);
   const errorReportCalled = useRef(false);
   const trackedRef = useRef(false);
+
+  const isPartner = document.referrer.includes("xullys.xyz");
+  const restrictedSites = ["streamex", "zxcstream"];
+  const restricted = restrictedSites.some((site) =>
+    document.referrer.includes(site),
+  );
   const { mutate: trackEmbedder } = useTrackEmbedder();
   const { isSandboxed, isLoading } = useSandboxDetection();
+
   // ─── Local State ─────────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(
@@ -132,7 +139,8 @@ export default function Player() {
     media_type,
     tmdbId,
     language,
-    !isLoading && !isSandboxed,
+    // !isLoading && !isSandboxed,
+    !isLoading && !(restricted && isSandboxed),
   );
 
   const imdbId = metadata?.imdb_id || null;
@@ -489,11 +497,6 @@ export default function Player() {
     });
   }, [mergeSubtitles.length]);
 
-  const isPartner =
-    typeof document !== "undefined" &&
-    window.self !== window.top &&
-    document.referrer.includes("xullys.xyz");
-  console.log("partner", !!isPartner);
   useAdsScript({
     enabled: !isPartner && metadataLoad,
     platform: "profiton",
@@ -547,7 +550,7 @@ export default function Player() {
   if (isLoading) {
     return null;
   }
-  if (isSandboxed && bypassSandbox) {
+  if (restricted && bypassSandbox) {
     return (
       <div
         className={cn(
