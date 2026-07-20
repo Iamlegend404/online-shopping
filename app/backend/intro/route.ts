@@ -45,13 +45,15 @@ export async function GET(req: Request) {
     const data = await res.json();
 
     // 3. Insert only if not exists
-    await supabase.from("segments_cache").insert({
-      imdb_id: imdbId,
-      season: Number(season),
-      episode: Number(episode),
-      tmdb_id: tmdbId,
-      data,
-    });
+    if (data.intro || data.outro || data.recap) {
+      await supabase.from("segments_cache").insert({
+        imdb_id: imdbId,
+        season: Number(season),
+        episode: Number(episode),
+        tmdb_id: tmdbId,
+        data,
+      });
+    }
 
     return NextResponse.json(data);
   } catch {
