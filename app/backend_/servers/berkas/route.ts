@@ -236,6 +236,7 @@ const PROXY_WORKERS = [
   "https://purple-bar-caf1.berkas0006.workers.dev/",
   "https://wispy-credit-3692.berkas0005.workers.dev/",
   "https://proud-paper-2687.berkas0007.workers.dev/",
+  "https://morning-glade-1938.berkas0008.workers.dev/",
 ];
 
 function shuffle<T>(arr: T[]): T[] {

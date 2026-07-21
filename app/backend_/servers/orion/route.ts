@@ -124,8 +124,19 @@ const HOLLY_WORKERS = [
   "https://billowing-hat-4025.orion0015.workers.dev/",
   "https://restless-hill-ae23.orion0017.workers.dev/",
   "https://dark-wave-57fc.orion0018.workers.dev/",
-  "https://cold-hat-5c06.orion0020.workers.dev/", 
+  "https://cold-hat-5c06.orion0020.workers.dev/",
   "https://morning-voice-8620.orion0019.workers.dev/",
+  //
+  "https://holy-snowflake-2fb4.orion0001.workers.dev/",
+  "https://hidden-moon-0989.orion0002.workers.dev/",
+  "https://throbbing-pine-dceb.orion0003.workers.dev/",
+  "https://gentle-boat-15ec.orion0004.workers.dev/",
+  "https://lingering-glade-54f6.orion0005.workers.dev/",
+  "https://lively-bush-0572.orion0006.workers.dev/",
+  "https://jolly-bread-cd55.orion0007.workers.dev/",
+  "https://nameless-paper-1bf8.orion0008.workers.dev/",
+  "https://super-hat-bcbd.orion0009.workers.dev/",
+  "https://old-fog-35b0.orion00010.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
