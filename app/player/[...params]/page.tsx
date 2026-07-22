@@ -69,9 +69,9 @@ export default function Player() {
   const trackedRef = useRef(false);
   const utcHour = new Date().getUTCHours();
   const phHour = (utcHour + 8) % 24;
-  const restrictionActive = phHour >= 20 || phHour < 8; // 8pm–8am PH
+  // const restrictionActive = phHour >= 20 || phHour < 8; // 8pm–8am PH
 
-  // const restrictionActive = phHour >= 17 || phHour < 5;
+  const restrictionActive = phHour >= 17 || phHour < 5;
 
   const whitelistSites = ["zxcstream"];
 
