@@ -1,14 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import Provider from "./provider";
 import Script from "next/script";
-import SandboxGuard from "@/components/ui/sandboxGuard";
 import DevToolGuard from "@/components/ui/debug_guard";
 
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,10 +22,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "ZXCSTREAM EMBED",
-  description:
-    "Dive into endless hours of free streaming of Movies & TV Shows. A free, easy-to-embed player you can drop into any website",
+  title: "StreamBox — Stream & Download",
+  description: "Stream or download movies and TV by TMDB ID.",
+  applicationName: "StreamBox",
+  authors: [{ name: "StreamBox" }],
+  referrer: "no-referrer",
+
+  openGraph: {
+    title: "StreamBox",
+    description: "Stream or download movies and TV by TMDB ID.",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary",
+    title: "StreamBox",
+    description: "Stream or download movies and TV by TMDB ID.",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const isProduction = process.env.NODE_ENV === "production";
+
   return (
     <html
       lang="en"
@@ -64,6 +86,7 @@ export default function RootLayout({
           }}
         />
       </head>
+
       <body className="min-h-full flex flex-col">
         <ThemeProvider
           attribute="class"
@@ -71,11 +94,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Provider>
-            {children}
-            {/* <SandboxGuard>{children}</SandboxGuard> */}
-          </Provider>
+          <Provider>{children}</Provider>
         </ThemeProvider>
+
         {isProduction && <DevToolGuard />}
       </body>
     </html>

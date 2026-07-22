@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { ALLOWED_ORIGINS, isValidReferer } from "@/lib/allowed-referers";
+import { ALLOWED_ORIGINS } from "@/lib/allowed-referers";
 import { FIELD_MAP } from "@/lib/token";
 import { SALT } from "@/lib/salt";
 
@@ -38,23 +38,12 @@ export async function POST(req: NextRequest) {
 
   const forwardedFor = req.headers.get("x-forwarded-for");
   const ip = forwardedFor?.split(",")[0] || "Unknown";
-  const connectingIp = req.headers.get("cf-connecting-ip");
-  const ua = req.headers.get("user-agent") || "unknown";
   const origin = req.headers.get("origin") || "";
-  const referer = req.headers.get("referer") || "";
 
-  // console.log({ connectingIp: connectingIp, ip: ip });
   if (!ALLOWED_ORIGINS.includes(origin)) {
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
       { status: 500 },
-    );
-  }
-
-  if (!isValidReferer(referer)) {
-    return NextResponse.json(
-      { success: false, error: "Forbiden" },
-      { status: 403 },
     );
   }
 

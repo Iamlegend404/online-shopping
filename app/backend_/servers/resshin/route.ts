@@ -73,11 +73,9 @@ function buildCanonical(
   if (!contentLength && body)
     contentLength = String(Buffer.byteLength(body, "utf8"));
   if (method.toUpperCase() === "GET" && !body) contentLength = "";
-
   const md5 = bodyMd5(body);
   const normalizedQuery = normalizeQuery(u.search.replace(/^\?/, ""));
   const pathUrl = u.pathname + (normalizedQuery ? `?${normalizedQuery}` : "");
-
   return [
     method.toUpperCase(),
     accept,
@@ -94,7 +92,6 @@ function sign(secretB64: string, canonical: string): string {
     /^[A-Za-z0-9+/=]+$/.test(secretB64) && secretB64.length % 4 === 0
       ? Buffer.from(secretB64, "base64")
       : Buffer.from(secretB64, "utf8");
-
   const h = crypto.createHmac("md5", key);
   h.update(canonical, "utf8");
   return h.digest("base64");
@@ -111,7 +108,6 @@ function makeXTr(
   return `${ts}|2|${sign(GATEWAY_SECRET, canonical)}`;
 }
 
-// ==================== AUTH ====================
 async function getServerJwt(): Promise<string> {
   if (cachedServerJwt) return cachedServerJwt;
   if (cachedServerJwtPromise) return cachedServerJwtPromise;
@@ -154,14 +150,13 @@ async function getServerJwt(): Promise<string> {
 
     const res = await fetch(BOTTOM_TAB_URL, { method: "GET", headers });
     const xuser = res.headers.get("x-user") || res.headers.get("X-User");
-    if (!xuser) throw new Error("Failed to get server JWT");
+    if (!xuser) throw new Error("Failed to get JWT");
 
     let token = xuser;
     try {
       const parsed = JSON.parse(xuser);
       if (parsed?.token) token = parsed.token;
     } catch {}
-
     cachedServerJwt = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
     return cachedServerJwt;
   })();
@@ -175,7 +170,6 @@ async function gatewayRequest(
   opts: { headers?: Record<string, string>; body?: string } = {},
 ) {
   const authToken = await getServerJwt();
-
   const headers: Record<string, string> = {
     accept: "*/*",
     authorization: authToken,
@@ -192,7 +186,7 @@ async function gatewayRequest(
   headers["x-tr-signature"] = makeXTr(method, url, headers, opts.body ?? "");
   headers["x-tr-signature-method"] = "HmacMD5";
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method,
     headers,
     body: method === "POST" ? opts.body : undefined,
@@ -211,7 +205,6 @@ async function gatewayRequest(
   }
 }
 
-// ==================== CORE ====================
 function cleanTitle(t: string): string {
   return t
     .toLowerCase()
@@ -219,56 +212,6 @@ function cleanTitle(t: string): string {
     .replace(/\s*\(.*?\)\s*/g, "")
     .replace(/[^\w\s]/g, "")
     .trim();
-}
-
-async function fetchSubjectQualities(
-  subjectId: string,
-  baseQuery: Record<string, string> = {},
-) {
-  const params = {
-    all: "0",
-    page: "1",
-    perPage: "10",
-    ...baseQuery,
-    subjectId,
-  };
-  const qs = new URLSearchParams(params).toString();
-
-  const res = await gatewayRequest(
-    "GET",
-    `https://api6.aoneroom.com/wefeed-mobile-bff/subject-api/resource?${qs}`,
-  );
-  const items = res?.data?.list || res?.data || [];
-
-  return items
-    .filter((item: any) => item.url || item.resourceLink || item.link)
-    .map((item: any) => ({
-      resolution: String(item.resolution || "1080"),
-      url: item.url || item.resourceLink || item.link,
-      size: Number(item.size) || 0,
-      format: "mp4",
-      type: (item.url || "").includes(".m3u8") ? "hls" : "mp4",
-    }))
-    .sort((a: any, b: any) => parseInt(b.resolution) - parseInt(a.resolution));
-}
-
-async function fetchSubtitles(subjectId: string, qualityId: string) {
-  try {
-    const url = `https://h5-api.aoneroom.com/wefeed-h5api-bff/subject/caption?format=MP4&id=${encodeURIComponent(qualityId)}&subjectId=${encodeURIComponent(subjectId)}`;
-    const res = await fetch(url, {
-      headers: { accept: "application/json", "user-agent": "Mozilla/5.0" },
-    });
-    const data = await res.json();
-    return (data?.data?.list || data?.data?.captions || [])
-      .map((sub: any) => ({
-        url: sub.url || sub.link,
-        language: sub.lang || sub.language || "en",
-        label: sub.label || sub.display || "Subtitle",
-      }))
-      .filter((s: any) => s.url);
-  } catch {
-    return [];
-  }
 }
 
 async function gatewaySearch(keyword: string) {
@@ -282,97 +225,174 @@ async function gatewaySearch(keyword: string) {
   );
 }
 
+async function gatewayGetSubject(subjectId: string) {
+  return gatewayRequest(
+    "GET",
+    `https://api6.aoneroom.com/wefeed-mobile-bff/subject-api/get?subjectId=${encodeURIComponent(subjectId)}`,
+  );
+}
+
+async function gatewayGetResource(
+  subjectId: string,
+  query: Record<string, string> = {},
+) {
+  const params = { all: "0", page: "1", perPage: "5", ...query, subjectId };
+  const qs = new URLSearchParams(params).toString();
+  return gatewayRequest(
+    "GET",
+    `https://api6.aoneroom.com/wefeed-mobile-bff/subject-api/resource?${qs}`,
+  );
+}
+
+function defaultString(value: unknown, fallback: string): string {
+  const str = String(value ?? "").trim();
+  return str || fallback;
+}
+
+function extractQualities(list: any[]): any[] {
+  const groups = new Map();
+  for (const item of list ?? []) {
+    if (!item || typeof item !== "object") continue;
+    const url = item.url || item.resourceLink || item.link;
+    if (!url) continue;
+    const resolution = String(item.resolution || "1080");
+    const quality = {
+      resolution,
+      url,
+      size: Number(item.size) || 0,
+      format: "mp4",
+    };
+    const key = resolution;
+    const existing = groups.get(key);
+    if (!existing || quality.size > existing.size) {
+      groups.set(key, quality);
+    }
+  }
+  return Array.from(groups.values()).sort(
+    (a, b) => parseInt(b.resolution) - parseInt(a.resolution),
+  );
+}
+
+async function fetchSubjectQualities(
+  subject: any,
+  baseQuery: Record<string, string> = {},
+  subjectDetails?: any,
+) {
+  const resourceResponse = await gatewayGetResource(
+    subject.subjectId,
+    baseQuery,
+  );
+  const items = resourceResponse?.data?.list || resourceResponse?.data || [];
+  return extractQualities(items);
+}
+
 // ==================== MAIN ROUTE ====================
 export async function GET(req: NextRequest) {
-  const sp = req.nextUrl.searchParams;
-
-  const tmdbId = sp.get(FIELD_MAP.id);
-  const mediaType = sp.get("b");
-  const title = sp.get(FIELD_MAP.title);
-  const date = sp.get("date");
-  const ts = Number(sp.get(FIELD_MAP.ts));
-  const token = sp.get(FIELD_MAP.token);
-  const f_token = sp.get(FIELD_MAP.fToken);
-  const season = sp.get(FIELD_MAP.season);
-  const episode = sp.get(FIELD_MAP.episode);
-
-  if (!tmdbId || !mediaType || !title || !ts || !token) {
-    return NextResponse.json(
-      { success: false, error: "Missing parameters" },
-      { status: 400 },
+  const logRequest = (status: number, reason: string) => {
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
+    const mediaType = req.nextUrl.searchParams.get("b");
+    const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
+    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
+    const extra = mediaType === "tv" ? `/${season}/${episode}` : "";
+    console.log(
+      `[ICARUS] ${tmdbId}/${mediaType}${extra} | ${status} | ${reason}`,
     );
-  }
-
-  if (
-    Date.now() - ts > 30000 ||
-    !validateBackendToken(tmdbId, f_token!, ts, token)
-  ) {
-    return NextResponse.json(
-      { success: false, error: "Invalid token" },
-      { status: 403 },
-    );
-  }
-
-  if (!isValidReferer(req.headers.get("referer") || "")) {
-    return NextResponse.json(
-      { success: false, error: "Forbidden" },
-      { status: 403 },
-    );
-  }
+  };
 
   try {
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
+    const mediaType = req.nextUrl.searchParams.get("b");
+    const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
+    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
+    const title = req.nextUrl.searchParams.get(FIELD_MAP.title);
+    const date = req.nextUrl.searchParams.get("date");
+    const ts = Number(req.nextUrl.searchParams.get(FIELD_MAP.ts));
+    const token = req.nextUrl.searchParams.get(FIELD_MAP.token)!;
+    const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!;
+
+    if (!tmdbId || !mediaType || !title || !date || !ts || !token) {
+      logRequest(404, "missing params");
+      return NextResponse.json(
+        { success: false, error: "missing params" },
+        { status: 404 },
+      );
+    }
+
+    if (
+      Date.now() - ts > 30000 ||
+      !validateBackendToken(tmdbId, f_token, ts, token)
+    ) {
+      logRequest(403, "invalid token");
+      return NextResponse.json(
+        { success: false, error: "Invalid token" },
+        { status: 403 },
+      );
+    }
+
     const year = date ? new Date(date).getFullYear().toString() : null;
     const keyword = `${title} ${year || ""}`.trim();
 
     const search = await gatewaySearch(keyword);
-    if (search?.code !== 0 || !search?.data?.results?.length) {
+    if (search?.code !== 0) {
+      logRequest(404, "no search results");
       return NextResponse.json(
         { success: false, error: "No search results" },
         { status: 404 },
       );
     }
 
-    const subjects = search.data.results.flatMap((r: any) => r.subjects || []);
+    const subjects = (search.data?.results || []).flatMap(
+      (r: any) => r.subjects || [],
+    );
     const filtered = subjects.filter(
       (s: any) => s.subjectType === (mediaType === "movie" ? 1 : 2),
     );
 
-    const ct = cleanTitle(title);
-    const primary =
-      filtered.find((s: any) => {
-        const st = cleanTitle(s.title || "");
-        const sy = (s.releaseDate || "").split("-")[0];
-        return (st.includes(ct) || ct.includes(st)) && (!year || sy === year);
-      }) || filtered[0];
-
-    if (!primary) {
+    if (!filtered.length) {
+      logRequest(404, "no matching content");
       return NextResponse.json(
         { success: false, error: "No matching content" },
         { status: 404 },
       );
     }
 
+    const ct = cleanTitle(title);
+    const matches = filtered.filter((s: any) => {
+      const st = cleanTitle(s.title ?? "");
+      const sy = (s.releaseDate ?? "").split("-")[0];
+      const tm = st.includes(ct) || ct.includes(st);
+      const ym = !year || !sy || year === sy;
+      return tm && ym;
+    });
+
+    const primary = matches[0] || filtered[0];
+
     const baseQuery: Record<string, string> =
       mediaType === "tv"
         ? { se: (season || "1").toString(), ep: (episode || "1").toString() }
         : {};
 
-    const qualities = await fetchSubjectQualities(primary.subjectId, baseQuery);
-    const subtitles = qualities.length
-      ? await fetchSubtitles(primary.subjectId, qualities[0].resolution)
-      : [];
+    const qualities = await fetchSubjectQualities(
+      { subjectId: primary.subjectId },
+      baseQuery,
+    );
 
+    logRequest(200, "OK");
     return NextResponse.json({
       success: true,
-      title: primary.title,
-      subjectId: primary.subjectId,
-      links: qualities,
-      subtitles,
+      links: qualities.map((q: any) => ({
+        resolution: q.resolution,
+        format: q.format,
+        size: q.size,
+        type: q.url.includes(".m3u8") ? "hls" : "mp4",
+        link: q.url, // DIRECT LINK
+      })),
+      subtitles: [],
       dubs: [],
       active: { langCode: "orig", langName: "Original" },
     });
   } catch (err: any) {
-    console.error("[Resshin Error]", err);
+    logRequest(500, err.message);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
