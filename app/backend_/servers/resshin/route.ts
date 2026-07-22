@@ -282,14 +282,26 @@ function extractQualities(list: any[]): any[] {
 async function fetchSubjectQualities(
   subject: any,
   baseQuery: Record<string, string> = {},
-  subjectDetails?: any,
 ) {
-  const resourceResponse = await gatewayGetResource(
-    subject.subjectId,
-    baseQuery,
-  );
-  const items = resourceResponse?.data?.list || resourceResponse?.data || [];
-  return extractQualities(items);
+  const allItems: any[] = [];
+
+  // Default request
+  const first = await gatewayGetResource(subject.subjectId, baseQuery);
+  allItems.push(...(first?.data?.list ?? []));
+
+  // Query each resolution
+  for (const resolution of ["360", "480", "720", "1080"]) {
+    const res = await gatewayGetResource(subject.subjectId, {
+      ...baseQuery,
+      resolution,
+    });
+
+    if (res?.code === 0) {
+      allItems.push(...(res?.data?.list ?? []));
+    }
+  }
+
+  return extractQualities(allItems);
 }
 
 // ==================== MAIN ROUTE ====================
