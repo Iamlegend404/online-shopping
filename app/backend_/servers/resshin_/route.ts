@@ -383,16 +383,50 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const ct = cleanTitle(title);
-    const matches = filtered.filter((s: any) => {
-      const st = cleanTitle(s.title ?? "");
-      const sy = (s.releaseDate ?? "").split("-")[0];
-      const tm = st.includes(ct) || ct.includes(st);
-      const ym = !year || !sy || year === sy;
-      return tm && ym;
+    const normalizedTitle = title.toLowerCase().trim().replace(/-/g, " ");
+
+    const LANG_TAGS =
+      /\[(tagalog|hindi|dubbed|multi|spanish|french|arabic|korean|japanese|tamil|telugu)\]/i;
+
+    const queryWords = normalizedTitle.split(/\s+/).filter(Boolean);
+    const dateObj = date ? new Date(date) : null;
+
+    const primary = filtered.find((item: any) => {
+      const itemTitle = item.title?.toLowerCase().replace(/-/g, " ") || "";
+      const itemReleaseDate = item.releaseDate;
+
+      if (LANG_TAGS.test(itemTitle)) return false;
+      if (!dateObj || !itemReleaseDate) return false;
+
+      const itemDate = new Date(itemReleaseDate);
+      const diff =
+        itemDate.getFullYear() * 12 +
+        itemDate.getMonth() -
+        (dateObj.getFullYear() * 12 + dateObj.getMonth());
+
+      if (Math.abs(diff) > 1) return false;
+
+      const itemTitleClean = itemTitle.replace(/\bs\d+(-s\d+)?\b/gi, "").trim();
+
+      const itemWordsClean = itemTitleClean.split(/\s+/).filter(Boolean);
+
+      if (
+        queryWords.length <= 2 &&
+        itemWordsClean.length !== queryWords.length
+      ) {
+        return false;
+      }
+
+      return queryWords.every((word) => itemTitle.includes(word));
     });
 
-    const primary = matches[0] || filtered[0];
+    if (!primary) {
+      logRequest(404, "no matching title");
+      return NextResponse.json(
+        { success: false, error: "No matching title" },
+        { status: 404 },
+      );
+    }
     const subjectDetails = await gatewayGetSubject(primary.subjectId);
 
     let dubs = subjectDetails?.data?.dubs ?? [];
@@ -468,7 +502,7 @@ export async function GET(req: NextRequest) {
         format: q.format,
         size: q.size,
         type: q.url.includes(".m3u8") ? "hls" : "mp4",
-        link: "",
+        // link: `/backend_/servers/resshin_/proxy?url=${encodeURIComponent(q.url)}`,
       })),
       subtitles: [],
       dubs: dubs.map((d: any) => ({
