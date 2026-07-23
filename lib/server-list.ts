@@ -2,7 +2,13 @@ import { ServerTypes } from "@/types/player-types";
 
 export const initialServers: ServerTypes[] = [
   {
-    name: "Resshin I",
+    name: "Kokuu I",
+    server: "orion_",
+    status: "queue",
+    desc: "Built-In Subtitle",
+  },
+  {
+    name: "Resshin II",
     server: "resshin_",
     status: "queue",
     desc: "Download & Multi Audio Support",
@@ -18,12 +24,6 @@ export const initialServers: ServerTypes[] = [
     server: "sentinel_",
     status: "queue",
     desc: "K-Dramas, C-Dramas & Asian movies",
-  },
-  {
-    name: "Kokuu II",
-    server: "orion_",
-    status: "queue",
-    desc: "Built-In Subtitle",
   },
 
   {
