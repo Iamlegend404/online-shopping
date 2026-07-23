@@ -145,7 +145,8 @@ export default function Player() {
     language,
     // !isLoading && !isSandboxed,
     // !isLoading && !(restricted && isSandboxed),
-    !isLoading && !(!isWhitelisted && isSandboxed && restrictionActive),
+    // !isLoading && !(!isWhitelisted && isSandboxed && restrictionActive),
+    !isLoading && !(!isWhitelisted && isSandboxed),
   );
 
   const imdbId = metadata?.imdb_id || null;
@@ -559,7 +560,7 @@ export default function Player() {
   if (isLoading) {
     return null;
   }
-  if (!isWhitelisted && restrictionActive && isSandboxed) {
+  if (!isWhitelisted && isSandboxed) {
     return (
       <div
         className={cn(
@@ -574,33 +575,22 @@ export default function Player() {
         <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
         <div className="relative z-10 text-center px-4">
           <div className="space-y-2">
-            <div className="">
+            <div>
               <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
                 ༼;´༎ຶ ۝ ༎ຶ༽
               </span>
             </div>
-            <p className=" lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-8 landscape:mt-1">
+
+            <p className="lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6 landscape:mt-1">
               Sandbox Not Supported
             </p>
-            <p className="text-muted-foreground lg:text-lg text-sm font-medium landscape:text-xs max-w-xl mt-3">
-              Contact the website owner to remove the sandbox restrictions or
-              disable the
-              <code className="mx-1">sandbox</code>
-              attribute.
-            </p>
 
-            <div className="mt-5 max-w-xl mx-auto rounded-lg border border-blue-500/25 bg-blue-500/10 md:px-4 px-2 md:py-3 py-1.5 text-left">
-              <div className="flex items-center gap-2 text-blue-600 md:text-base text-sm landscape:text-xs font-semibold">
-                Sandbox detector schedule
-              </div>
-              <p className="text-blue-600/80 md:text-sm text-xs landscape:text-[10px] font-medium mt-1.5 leading-relaxed">
-                The detector is <strong>on</strong> from 12:00–00:00 GMT and{" "}
-                <strong>off</strong> from 00:00–12:00 GMT. You're seeing this
-                screen because the detector is currently active — check back
-                after 00:00 GMT, or contact the website owner to remove the
-                sandbox restriction directly.
-              </p>
-            </div>
+            <p className="text-muted-foreground lg:text-lg text-sm font-medium landscape:text-xs max-w-xl mt-3">
+              Contact the website owner to remove the{" "}
+              <code className="mx-1">sandbox</code>
+              attribute or allow this player to run without sandbox
+              restrictions.
+            </p>
           </div>
         </div>
 
@@ -622,7 +612,7 @@ export default function Player() {
     return (
       <div
         className={cn(
-          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+          " h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
         )}
       >
         <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
@@ -643,6 +633,17 @@ export default function Player() {
           >
             <ArrowLeft /> Go back
           </Button>
+        </div>
+        <div className="absolute md:bottom-4 bottom-2 text-center md:text-sm text-xs  text-muted-foreground">
+          Having issues? join us on{" "}
+          <Link
+            href="https://discord.gg/yv7wJV97Jd"
+            target="_blank"
+            className="text-blue-400 underline hover:text-blue-300"
+          >
+            Discord
+          </Link>
+          .
         </div>
       </div>
     );
@@ -685,6 +686,17 @@ export default function Player() {
               Contact Us
             </Button> */}
           </div>
+        </div>
+        <div className="absolute md:bottom-4 bottom-2 text-center md:text-sm text-xs  text-muted-foreground">
+          Having issues? join us on{" "}
+          <Link
+            href="https://discord.gg/yv7wJV97Jd"
+            target="_blank"
+            className="text-blue-400 underline hover:text-blue-300"
+          >
+            Discord
+          </Link>
+          .
         </div>
       </div>
     );
