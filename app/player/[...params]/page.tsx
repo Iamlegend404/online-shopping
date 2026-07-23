@@ -735,24 +735,17 @@ export default function Player() {
           key={playerSrc}
           ref={videoRef}
           onCanPlayThrough={handleCanPlay}
-          onError={(e) => {
-            handleServerFail();
+          onError={() => {
+            if (source?.links && Number(isAuto) < source.links.length - 1) {
+              useSettingsStore.getState().setValue("Source quality", {
+                display: "Auto",
+                id: String(Number(isAuto) + 1),
+              });
 
-            // if (fetchServer.server === "icarus" && !errorReportCalled.current) {
-            //   errorReportCalled.current = true;
-            //   fetch("/backend_/servers/icarus/report_error", {
-            //     method: "POST",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify({
-            //       tmdbId,
-            //       mediaType: media_type,
-            //       season: media_type === "tv" ? season : "",
-            //       episode: media_type === "tv" ? episode : "",
-            //       dub: source?.active?.langCode,
-            //       type: source?.active?.langType,
-            //     }),
-            //   });
-            // }
+              return;
+            }
+
+            handleServerFail();
           }}
           autoPlay={auto_play && autoplay === "on"}
           muted={auto_play && autoplay === "on"}
