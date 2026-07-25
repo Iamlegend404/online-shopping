@@ -248,9 +248,9 @@ export default function Player() {
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
     servers[serverIndex].status === "available"
-      ? (source?.links[Number(isAuto)]?.link ?? null)
+      ? "https://hls03.cdnvideo11.shop/The-Wild-Robot.2024Ep1.m3u8"
       : null;
-
+  //https://damp-queen-4173.tomato20.workers.dev/
   // console.log("server index:", serverIndex, " player src=", playerSrc);
 
   const srcType = source?.links?.[Number(isAuto)]?.type ?? "";
