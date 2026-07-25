@@ -248,7 +248,7 @@ export default function Player() {
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
     servers[serverIndex].status === "available"
-      ? "https://tmp.cdnvideo11.shop/tmp/Scary-Movie-2026-Ep1/index.m3u8?v=81946712-599d-43e1-bef6-5031987923cb"
+      ? (source?.links[Number(isAuto)]?.link ?? null)
       : null;
 
   // console.log("server index:", serverIndex, " player src=", playerSrc);
