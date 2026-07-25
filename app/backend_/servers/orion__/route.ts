@@ -258,6 +258,10 @@ const HOLLY_WORKERS = [
   "https://shiny-hill-6358.angsarapmopia2.workers.dev/",
   "https://muddy-salad-d42e.angsarapmopia3.workers.dev/",
   "https://empty-wind-d8f1.angsarapmopia4.workers.dev/",
+  "https://rapid-hat-66b0.angsarapmopia6.workers.dev/",
+  "https://frosty-unit-f38c.angsarapmopia5.workers.dev/",
+  "https://bitter-hat-f3d7.angsarapmopia7.workers.dev/",
+  "https://weathered-queen-9908.angsarapmopia8.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
