@@ -69,9 +69,9 @@ export async function GET(req: NextRequest) {
       ...(dubCode && { dubCode }),
       dubType: String(dubType),
     });
-    // const origin = req.nextUrl.origin;
+    const origin = req.nextUrl.origin;
     const res = await fetch(
-      `https://v-zxc-stream-xyz.up.railway.app//backend_/servers/resshin?${params.toString()}`,
+      `${origin}/backend_/servers/resshin?${params.toString()}`,
       {
         method: "GET",
         // headers: {
