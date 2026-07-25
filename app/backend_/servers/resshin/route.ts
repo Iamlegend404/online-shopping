@@ -1,50 +1,31 @@
+// Backend B route example
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL_SUS!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY_SUS!,
-);
+import { extractResshin } from "@/lib/resshin-extractor";
 
 export async function GET(req: NextRequest) {
-  const ip =
-    req.headers.get("cf-connecting-ip") ||
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown";
+  const tmdbId = req.nextUrl.searchParams.get("tmdbId")!;
+  const mediaType = req.nextUrl.searchParams.get("mediaType")!;
+  const title = req.nextUrl.searchParams.get("title")!;
+  const date = req.nextUrl.searchParams.get("date")!;
+  const season = req.nextUrl.searchParams.get("season");
+  const episode = req.nextUrl.searchParams.get("episode");
+  const dubCode = req.nextUrl.searchParams.get("dubCode");
+  const dubType = Number(req.nextUrl.searchParams.get("dubType") ?? "0");
 
-  console.log(`[SCRAPING ROUTE NO EXIST] | IP: ${ip}`);
+  const result = await extractResshin({
+    tmdbId,
+    mediaType,
+    title,
+    date,
+    season,
+    episode,
+    dubCode,
+    dubType,
+  });
 
-  try {
-    const { data } = await supabase
-      .from("suspicious_ips")
-      .select("hits")
-      .eq("ip", ip)
-      .maybeSingle();
-
-    if (data) {
-      await supabase
-        .from("suspicious_ips")
-        .update({
-          hits: data.hits + 1,
-          last_seen: new Date().toISOString(),
-        })
-        .eq("ip", ip);
-    } else {
-      await supabase.from("suspicious_ips").insert({
-        ip,
-        hits: 1,
-        asn: req.headers.get("cf-connecting-asn"),
-        country: req.headers.get("cf-ipcountry"),
-        method: req.method,
-        path: req.nextUrl.pathname,
-        user_agent: req.headers.get("user-agent"),
-        referer: req.headers.get("referer"),
-      });
-    }
-  } catch (err) {
-    console.error("Failed to log suspicious IP:", err);
+  if (!result.success) {
+    return NextResponse.json(result, { status: result.status });
   }
 
-  return new NextResponse(null, { status: 429 });
+  return NextResponse.json(result);
 }

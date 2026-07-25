@@ -774,7 +774,6 @@ export default function Player() {
           ref={videoRef}
           onCanPlayThrough={handleCanPlay}
           onError={() => {
-            if (srcType === "hls") return;
             if (source?.links && Number(isAuto) < source.links.length - 1) {
               useSettingsStore.getState().setValue("Source quality", {
                 display: "Auto",

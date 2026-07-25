@@ -155,16 +155,16 @@ export function useVideoPlayer({
       hls.attachMedia(video);
 
       hlsRef.current = hls;
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        if (!data.fatal) return;
+      // hls.on(Hls.Events.ERROR, (_, data) => {
+      //   if (!data.fatal) return;
 
-        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-          hls.recoverMediaError();
-          return;
-        }
+      //   if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+      //     hls.recoverMediaError();
+      //     return;
+      //   }
 
-        handleServerFail();
-      });
+      //   handleServerFail();
+      // });
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         video.play().catch(() => {});
         setQuality(data.levels);
@@ -204,7 +204,7 @@ export function useVideoPlayer({
     } else {
       video.src = playerSrc;
     }
-  }, [playerSrc, srcType, handleServerFail]);
+  }, [playerSrc, srcType]);
 
   useEffect(() => {
     if (!hlsRef.current) return;
