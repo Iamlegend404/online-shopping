@@ -1,3 +1,54 @@
+// import { NextRequest, NextResponse } from "next/server";
+
+// export const runtime = "nodejs";
+
+// export async function GET(req: NextRequest) {
+//   return proxy(req);
+// }
+
+// export async function HEAD(req: NextRequest) {
+//   return proxy(req);
+// }
+
+// async function proxy(req: NextRequest) {
+//   try {
+//     const url = req.nextUrl.searchParams.get("url");
+
+//     if (!url) {
+//       return new NextResponse("Missing url", { status: 400 });
+//     }
+
+//     const headers: Record<string, string> = {
+//       "User-Agent":
+//         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+//       Referer: "https://moviebox.ph/",
+//       Origin: "https://moviebox.ph",
+//       Accept: "*/*",
+//       "Accept-Language": "en-US,en;q=0.7",
+//       "Accept-Encoding": "identity;q=1, *;q=0",
+//     };
+
+//     const range = req.headers.get("range");
+//     if (range) {
+//       headers["Range"] = range;
+//     }
+
+//     const upstream = await fetch(url, {
+//       method: req.method,
+//       headers,
+//     });
+
+//     return new NextResponse(upstream.body, {
+//       status: upstream.status,
+//       headers: upstream.headers,
+//     });
+//   } catch (err: any) {
+//     return NextResponse.json(
+//       { success: false, error: err.message },
+//       { status: 500 },
+//     );
+//   }
+// }
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -18,12 +69,17 @@ async function proxy(req: NextRequest) {
       return new NextResponse("Missing url", { status: 400 });
     }
 
-    // ==================== HEADERS (matching RESSHIN gateway) ====================
+    const controller = new AbortController();
+
+    // Abort upstream if client disconnects
+    req.signal.addEventListener("abort", () => controller.abort());
+
     const headers: Record<string, string> = {
       accept: "*/*",
-      "accept-encoding": "gzip, deflate, br",
+      "accept-encoding": "identity",
       "user-agent":
         "com.community.mbox.in.geobypass/51042203 (Linux; U; Android 7.1.2; en_US; SM-G955N; Build/NRD90M.G955NKSU1AQDC; Cronet/104.0.5112.46)",
+
       "x-client-info": JSON.stringify({
         package_name: "com.community.mbox.in.geobypass",
         version_name: "3.0.14.0422.03",
@@ -40,39 +96,56 @@ async function proxy(req: NextRequest) {
         "X-Play-Mode": "2",
         "X-Family-Mode": "0",
       }),
+
       "x-client-status": "0",
       "x-family-mode": "0",
       "x-play-mode": "2",
     };
 
-    // Forward important client headers
-    const range = req.headers.get("range");
-    if (range) headers["Range"] = range;
-
-    const accept = req.headers.get("accept");
-    if (accept) headers["accept"] = accept;
-
-    const authorization = req.headers.get("authorization");
-    if (authorization) headers["authorization"] = authorization;
-
-    // Optional: forward more headers if needed
-    const xClientInfo = req.headers.get("x-client-info");
-    if (xClientInfo) headers["x-client-info"] = xClientInfo;
+    // Forward only needed request headers
+    for (const h of [
+      "range",
+      "if-range",
+      "if-none-match",
+      "if-modified-since",
+      "authorization",
+    ]) {
+      const value = req.headers.get(h);
+      if (value) headers[h] = value;
+    }
 
     const upstream = await fetch(url, {
       method: req.method,
       headers,
-      // Important for video streaming
       redirect: "follow",
+      signal: controller.signal,
+      cache: "no-store",
     });
 
-    const responseHeaders = new Headers(upstream.headers);
+    const responseHeaders = new Headers();
 
-    // Clean up hop-by-hop headers that shouldn't be forwarded
-    responseHeaders.delete("content-encoding");
-    responseHeaders.delete("content-length");
-    responseHeaders.delete("transfer-encoding");
-    responseHeaders.delete("connection");
+    // Forward only useful response headers
+    const passHeaders = [
+      "content-type",
+      "content-length",
+      "content-range",
+      "accept-ranges",
+      "etag",
+      "last-modified",
+      "cache-control",
+      "expires",
+      "date",
+    ];
+
+    for (const h of passHeaders) {
+      const value = upstream.headers.get(h);
+      if (value) {
+        responseHeaders.set(h, value);
+      }
+    }
+
+    responseHeaders.set("Access-Control-Allow-Origin", "*");
+    responseHeaders.set("Access-Control-Expose-Headers", "*");
 
     return new NextResponse(upstream.body, {
       status: upstream.status,
@@ -80,10 +153,20 @@ async function proxy(req: NextRequest) {
       headers: responseHeaders,
     });
   } catch (err: any) {
-    console.error("[Proxy Error]", err);
+    if (err.name === "AbortError") {
+      return new NextResponse(null, { status: 499 });
+    }
+
+    console.error("[Proxy]", err);
+
     return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 500 },
+      {
+        success: false,
+        error: err.message,
+      },
+      {
+        status: 500,
+      },
     );
   }
 }
