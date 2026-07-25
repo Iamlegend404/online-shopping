@@ -165,7 +165,7 @@ async function handleCommand(interaction: DiscordInteraction): Promise<void> {
     console.error(err);
 
     await sendFollowUp(token, {
-      content: "Something went wrong.",
+      content: "Tip: Wait for suggestions to load, then select one.",
     });
   }
 }
