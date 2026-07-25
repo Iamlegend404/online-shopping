@@ -10,11 +10,6 @@ const DISCORD_API = "https://discord.com/api/v10";
 
 /* ---------- Types ---------- */
 
-interface DiscordInteractionOption {
-  name: string;
-  value: string;
-}
-
 interface DiscordInteractionData {
   name: string;
   options?: DiscordInteractionOption[];
@@ -37,7 +32,11 @@ interface TmdbSearchResult {
   overview?: string;
   poster_path?: string;
 }
-
+interface DiscordInteractionOption {
+  name: string;
+  value: string;
+  focused?: boolean;
+}
 /* ---------- Discord signature verification ---------- */
 
 function verifySignature(
@@ -54,23 +53,6 @@ function verifySignature(
       Buffer.from(DISCORD_PUBLIC_KEY, "hex"),
     )
   );
-}
-/* ---------- Backend search ---------- */
-
-async function searchTMDB(type: "movie" | "tv", query: string) {
-  const res = await fetch(
-    `https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  if (!res.ok) throw new Error("Failed to search TMDB");
-
-  const { results } = await res.json();
-  return results?.[0] ?? null;
 }
 /* ---------- Embed builder ---------- */
 
@@ -133,9 +115,17 @@ async function sendFollowUp(
 
 async function handleCommand(interaction: DiscordInteraction): Promise<void> {
   const token = interaction.token;
-  const type = interaction.data?.name as "movie" | "tv";
-  const query = interaction.data?.options?.[0]?.value?.trim();
+  const type = interaction.data?.name;
+  const query = interaction.data?.options
+    ?.find((option) => option.name === "query")
+    ?.value?.trim();
 
+  if (type !== "movie" && type !== "tv") {
+    await sendFollowUp(token, {
+      content: "Invalid command.",
+    });
+    return;
+  }
   if (!query) {
     await sendFollowUp(token, {
       content: `Please provide a ${type === "movie" ? "movie" : "TV show"} title.`,
@@ -144,7 +134,7 @@ async function handleCommand(interaction: DiscordInteraction): Promise<void> {
   }
 
   try {
-    const item = await searchTMDB(type, query);
+    const item = await getTMDBDetails(type, query);
 
     if (!item) {
       await sendFollowUp(token, {
@@ -153,7 +143,7 @@ async function handleCommand(interaction: DiscordInteraction): Promise<void> {
       return;
     }
 
-    const watchUrl = `${PLAYER_URL}/${type}/${item.id}`;
+    const watchUrl = `${PLAYER_URL}/player/${type}/${item.id}`;
     const embed = buildEmbed(item, watchUrl);
 
     await sendFollowUp(token, {
@@ -168,6 +158,80 @@ async function handleCommand(interaction: DiscordInteraction): Promise<void> {
   }
 }
 
+async function handleAutocomplete(interaction: DiscordInteraction) {
+  const commandName = interaction.data?.name;
+
+  if (commandName !== "movie" && commandName !== "tv") {
+    return NextResponse.json({
+      type: 8,
+      data: {
+        choices: [],
+      },
+    });
+  }
+
+  const query = interaction.data?.options
+    ?.find((option) => option.focused)
+    ?.value?.trim();
+
+  if (!query || query.length < 2) {
+    return NextResponse.json({
+      type: 8,
+      data: {
+        choices: [],
+      },
+    });
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/search/${commandName}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`,
+    );
+
+    const data = await res.json();
+
+    const choices = (data.results ?? [])
+      .slice(0, 25)
+      .map((item: TmdbSearchResult) => {
+        const title = item.title || item.name || "Unknown";
+
+        const year = (item.release_date || item.first_air_date || "").slice(
+          0,
+          4,
+        );
+
+        return {
+          name: `${title}${year ? ` (${year})` : ""}`.slice(0, 100),
+          value: String(item.id),
+        };
+      });
+
+    return NextResponse.json({
+      type: 8,
+      data: {
+        choices,
+      },
+    });
+  } catch (error) {
+    console.error("Autocomplete error:", error);
+
+    return NextResponse.json({
+      type: 8,
+      data: {
+        choices: [],
+      },
+    });
+  }
+}
+async function getTMDBDetails(type: "movie" | "tv", id: string) {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}`,
+  );
+
+  if (!res.ok) throw new Error("Failed to get details");
+
+  return await res.json();
+}
 /* ---------- Route handler ---------- */
 
 export async function POST(req: NextRequest) {
@@ -207,6 +271,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ type: 1 });
   }
 
+  // Autocomplete interaction (type 4)
+  if (interaction.type === 4) {
+    return handleAutocomplete(interaction);
+  }
+
   // Slash command (type 2 = APPLICATION_COMMAND)
   if (interaction.type === 2) {
     const commandName = interaction.data?.name;
@@ -218,7 +287,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
+      type: 4,
       data: { content: "Unknown command." },
     });
   }
