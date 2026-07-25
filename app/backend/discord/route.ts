@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import nacl from "tweetnacl";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY!;
@@ -213,7 +212,7 @@ export async function POST(req: NextRequest) {
     const commandName = interaction.data?.name;
 
     if (commandName === "movie" || commandName === "tv") {
-      after(() => handleCommand(interaction));
+      handleCommand(interaction).catch(console.error);
 
       return NextResponse.json({ type: 5 });
     }
