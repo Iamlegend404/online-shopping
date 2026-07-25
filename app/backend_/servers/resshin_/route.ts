@@ -69,15 +69,15 @@ export async function GET(req: NextRequest) {
       ...(dubCode && { dubCode }),
       dubType: String(dubType),
     });
-    const origin = req.nextUrl.origin;
+    // const origin = req.nextUrl.origin;
     const res = await fetch(
-      `${origin}/backend_/servers/resshin?${params.toString()}`,
+      `https://v-zxc-stream-xyz.up.railway.app//backend_/servers/resshin?${params.toString()}`,
       {
         method: "GET",
-        headers: {
-          // optional: add an internal secret if you want
-          // "x-internal-key": process.env.INTERNAL_KEY || "",
-        },
+        // headers: {
+        //   // optional: add an internal secret if you want
+        //   // "x-internal-key": process.env.INTERNAL_KEY || "",
+        // },
       },
     );
 
