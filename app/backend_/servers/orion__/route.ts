@@ -278,6 +278,10 @@ const HOLLY_WORKERS = [
   "https://morning-waterfall-484c.datikabanggago1.workers.dev/",
   "https://crimson-star-89c1.datikabanggago4.workers.dev/",
   "https://cold-waterfall-1e9a.datikabanggago3.workers.dev/",
+  "https://white-cherry-b207.datikabanggago5.workers.dev/",
+  "https://sweet-waterfall-2678.datikabanggago6.workers.dev/",
+  "https://fragrant-voice-c481.datikabanggago8.workers.dev/",
+  "https://polished-hall-78b6.datikabanggago7.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
