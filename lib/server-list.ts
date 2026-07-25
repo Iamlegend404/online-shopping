@@ -2,37 +2,36 @@ import { ServerTypes } from "@/types/player-types";
 
 export const initialServers: ServerTypes[] = [
   {
+    name: "Orion I",
+    server: "orion_",
+    status: "queue",
+    desc: "Built-In Subtitle",
+  },
+
+  {
+    name: "Berkas II",
+    server: "berkas_",
+    status: "queue",
+    desc: "4K Support",
+  },
+  {
+    name: "Sentinel III",
+    server: "sentinel_",
+    status: "queue",
+    desc: "K-Dramas, C-Dramas & Asian movies",
+  },
+  {
     name: "Resshin II",
     server: "resshin_",
     status: "queue",
     desc: "Download & Multi Audio Support",
   },
-  // {
-  //   name: "Orion I",
-  //   server: "orion_",
-  //   status: "queue",
-  //   desc: "Built-In Subtitle",
-  // },
-
-  // {
-  //   name: "Berkas II",
-  //   server: "berkas_",
-  //   status: "queue",
-  //   desc: "4K Support",
-  // },
-  // {
-  //   name: "Sentinel III",
-  //   server: "sentinel_",
-  //   status: "queue",
-  //   desc: "K-Dramas, C-Dramas & Asian movies",
-  // },
-
-  // {
-  //   name: "Athena V",
-  //   server: "athena_",
-  //   status: "queue",
-  //   desc: "Main Server & Multi Audio Support",
-  // },
+  {
+    name: "Athena V",
+    server: "athena_",
+    status: "queue",
+    desc: "Main Server & Multi Audio Support",
+  },
 
   // {
   //   name: "Talos V",
