@@ -9,27 +9,27 @@ export const initialServers: ServerTypes[] = [
   // },
   {
     name: "Orion I",
-    server: "orion_",
+    server: "orion__",
     status: "queue",
     desc: "Built-In Subtitle",
   },
 
   {
     name: "Berkas II",
-    server: "berkas_",
+    server: "berkas__",
     status: "queue",
     desc: "4K Support",
   },
   {
     name: "Sentinel III",
-    server: "sentinel_",
+    server: "sentinel__",
     status: "queue",
     desc: "K-Dramas, C-Dramas & Asian movies",
   },
 
   {
     name: "Athena V",
-    server: "athena_",
+    server: "athena__",
     status: "queue",
     desc: "Main Server & Multi Audio Support",
   },
