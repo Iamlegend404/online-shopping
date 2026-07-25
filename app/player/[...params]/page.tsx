@@ -248,7 +248,7 @@ export default function Player() {
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
     servers[serverIndex].status === "available"
-      ? "https://vip.1x2.space/playlist/Ln4VTNPFrHeR0o8l9BvFXT3mots0oXeE4NqCjXY4UoYF-9Ei--Bldm0QD6q5_vuSmQiPpieC9sw6gYQJZT5a8xHeDIU/master.m3u8"
+      ? (source?.links[Number(isAuto)]?.link ?? null)
       : null;
 
   // console.log("server index:", serverIndex, " player src=", playerSrc);
