@@ -81,7 +81,6 @@ function buildEmbed(item: TmdbSearchResult, watchUrl: string) {
     fields: [
       { name: "Release Year", value: year, inline: true },
       { name: "Rating", value: `${rating} / 10`, inline: true },
-      { name: "Watch", value: `[Click here](${watchUrl})`, inline: false },
     ],
     ...(poster ? { thumbnail: { url: poster } } : {}),
   };
@@ -148,6 +147,19 @@ async function handleCommand(interaction: DiscordInteraction): Promise<void> {
 
     await sendFollowUp(token, {
       embeds: [embed],
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 5,
+              label: "Watch",
+              url: watchUrl,
+            },
+          ],
+        },
+      ],
     });
   } catch (err) {
     console.error(err);
