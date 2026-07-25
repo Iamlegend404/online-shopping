@@ -262,6 +262,22 @@ const HOLLY_WORKERS = [
   "https://frosty-unit-f38c.angsarapmopia5.workers.dev/",
   "https://bitter-hat-f3d7.angsarapmopia7.workers.dev/",
   "https://weathered-queen-9908.angsarapmopia8.workers.dev/",
+  "https://proud-smoke-1acf.angsarapmopia10.workers.dev/",
+  "https://polished-dawn-ad7d.angsarapmopia9.workers.dev/",
+  "https://raspy-glitter-ae5f.angsarapmopia11.workers.dev/",
+  "https://lively-firefly-5f98.angsarapmopia12.workers.dev/",
+  "https://red-sea-b7e3.angsarapmopia13.workers.dev/",
+  "https://noisy-rain-cec7.angsarapmopia14.workers.dev/",
+  "https://shy-truth-902b.angsarapmopia16.workers.dev/",
+  "https://silent-poetry-5e5b.angsarapmopia15.workers.dev/",
+  "https://steep-shadow-990e.angsarapmopia18.workers.dev/",
+  "https://lively-heart-12e9.angsarapmopia17.workers.dev/",
+  "https://white-breeze-14ca.angsarapmopia19.workers.dev/",
+  "https://solitary-flower-6ebd.angsarapmopia20.workers.dev/",
+  "https://green-salad-281b.datikabanggago2.workers.dev/",
+  "https://morning-waterfall-484c.datikabanggago1.workers.dev/",
+  "https://crimson-star-89c1.datikabanggago4.workers.dev/",
+  "https://cold-waterfall-1e9a.datikabanggago3.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
