@@ -248,7 +248,7 @@ export default function Player() {
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
     servers[serverIndex].status === "available"
-      ? "https://vip.1x2.space/playlist/fHgVGtKU-XCR0419phvFXDu0ooJnpHaEso7Qj3xqUNZX_Yhy--Bldm0QD6q5_vuSmQiPpv1_BCUCTZBcYDujMiVvjeQ/L2hKWGNTTHFMZy9wbC9INHNJQUFBQUFBQUFBd1hCMFhxQ0lCZ0EwRmY2TVRIYnBVc3lVaG9vS041aDJPY1V0dXByWmo3OXpvbUN3RjROYkEzQ2NXOXMzRy43T0VLWGJSVEcxM2dIOFFmYnMwUUd5N1BNV0NISUVabEdaQ1ZnZWxtSHZ5cVF3Q2NzU2ttQmtZRjA5WTdMeVlGeTlNQVIweFZ4aTI3b280TTR0SFc0MkpFdnRkZVliNDRybjJoWVRkVEpzZGdVWTNKWFA3LlAwaXV3cVVVc1k2bFNDZ2x5dTJ2SFRnS2VjNXVwUEEuV3owSnA2UGJEU3dMMnVtTDFDZkM1UUlsa1FNNlZvcmx3VmdqZmZwczFNU0tGLlZ5NXIzYmY1dHd2a2ZLdnVRRHJMNnZqX1RUTUdxbFVlWUZ0Y0VQU1RYTlg0N2NjYWRuS0ZKbDZlVms1NUlZVTdfcGduN3lodWlORDI0OWt0UWNVQ2k5eHU4THVIOWZnY0w5QkFRQUEvMGY5YjczOGFmOTA2ZWI5MWQ4ZjViM2ZhYjE0ZTc4Y2MvaW5kZXgubTN1OA-index.m3u8"
+      ? "https://vip.1x2.space/playlist/Ln4VTNPFrHeR0o8l9BvFXT3mots0oXeE4NqCjXY4UoYF-9Ei--Bldm0QD6q5_vuSmQiPpieC9sw6gYQJZT5a8xHeDIU/master.m3u8"
       : null;
 
   // console.log("server index:", serverIndex, " player src=", playerSrc);
