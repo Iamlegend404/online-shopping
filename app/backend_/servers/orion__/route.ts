@@ -282,6 +282,10 @@ const HOLLY_WORKERS = [
   "https://sweet-waterfall-2678.datikabanggago6.workers.dev/",
   "https://fragrant-voice-c481.datikabanggago8.workers.dev/",
   "https://polished-hall-78b6.datikabanggago7.workers.dev/",
+  "https://shy-butterfly-b784.datikabanggago10.workers.dev/",
+  "https://flat-paper-c525.datikabanggago9.workers.dev/",
+  "https://super-paper-6001.datikabanggago11.workers.dev/",
+  "https://white-block-0cef.datikabanggago12.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -291,8 +295,7 @@ function shuffle<T>(arr: T[]): T[] {
   }
   return a;
 }
-export async function getWorkingProxy(proxies: string[]) {
-  const activeProxies = await getActiveProxies(proxies);
+export async function getWorkingProxy(activeProxies: string[]) {
   const shuffledProxies = shuffle(activeProxies);
   for (const proxy of shuffledProxies) {
     try {
@@ -373,8 +376,8 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-
-    const worker = await getWorkingProxy(HOLLY_WORKERS);
+    const activeProxies = await getActiveProxies(HOLLY_WORKERS);
+    const worker = await getWorkingProxy(activeProxies);
 
     if (!worker) {
       logRequest(502, "no working worker");
@@ -415,6 +418,7 @@ export async function GET(req: NextRequest) {
         links,
         subtitles: [],
         meow: true,
+        remaining: activeProxies.length,
       });
     }
 
@@ -531,7 +535,12 @@ export async function GET(req: NextRequest) {
     );
 
     logRequest(200, "ORION OK!!!!!");
-    return NextResponse.json({ success: true, links, subtitles: [] });
+    return NextResponse.json({
+      success: true,
+      links,
+      subtitles: [],
+      remaining: activeProxies.length,
+    });
   } catch (err) {
     console.error("Holly route error:", err);
     return NextResponse.json(

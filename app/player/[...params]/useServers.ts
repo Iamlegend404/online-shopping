@@ -4,13 +4,15 @@ import { useCallback, useState } from "react";
 
 export function usePlayerServers({
   defaultServerIndex,
-  resshin = true,
+  resshin = false,
 }: {
   defaultServerIndex: number;
   resshin?: boolean;
 }) {
   const isEmbedded = window.self !== window.top;
-  const serverList = [RESSHIN_SERVER, ...initialServers];
+  const serverList = resshin
+    ? [RESSHIN_SERVER, ...initialServers]
+    : initialServers;
   const [servers, setServers] = useState<ServerTypes[]>(serverList);
   const [serverIndex, setServerIndex] = useState(defaultServerIndex);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
