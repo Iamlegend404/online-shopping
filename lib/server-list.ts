@@ -21,12 +21,12 @@ export const initialServers: ServerTypes[] = [
     status: "queue",
     desc: "4K Support",
   },
-  {
-    name: "Daedalus III",
-    server: "daedalus_",
-    status: "queue",
-    desc: "Alternative",
-  },
+  // {
+  //   name: "Daedalus III",
+  //   server: "daedalus_",
+  //   status: "queue",
+  //   desc: "Alternative",
+  // },
   {
     name: "Sentinel IV",
     server: "sentinel__",
