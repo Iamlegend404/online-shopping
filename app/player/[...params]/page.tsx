@@ -248,7 +248,7 @@ export default function Player() {
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
     servers[serverIndex].status === "available"
-      ? (source?.links[Number(isAuto)]?.link ?? null)
+      ? "https://vixcloud.co/playlist/268184?token=f910a74d80a3a787fd7afeabed6b2b93&expires=1790227995&h=1&lang=en"
       : null;
 
   // console.log("server index:", serverIndex, " player src=", playerSrc);
