@@ -253,6 +253,7 @@ export async function GET(req: NextRequest) {
     //    subtitles: [],
     //    meow: !!cached,
     //  });
+    logRequest(200, "VIXSRC OK!!!!!");
     return NextResponse.json({
       success: true,
       links: [{ type: "hls", link: streamUrl }],

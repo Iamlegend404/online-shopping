@@ -530,7 +530,7 @@ export async function GET(req: NextRequest) {
         })),
     );
 
-    logRequest(200, "OK!!!!!");
+    logRequest(200, "ORION OK!!!!!");
     return NextResponse.json({ success: true, links, subtitles: [] });
   } catch (err) {
     console.error("Holly route error:", err);

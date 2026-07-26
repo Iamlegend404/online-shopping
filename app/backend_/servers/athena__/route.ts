@@ -411,7 +411,7 @@ export async function GET(req: NextRequest) {
     }
     const signedUrl = await signWorkerUrl(workerUrl);
 
-    logRequest(200, "OK!!!!!");
+    logRequest(200, "ATHENA OK!!!!!");
     return NextResponse.json({
       success: true,
       links: [{ type: "hls", link: signedUrl }],

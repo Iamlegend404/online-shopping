@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
         { status: 404 },
       );
     }
-    logRequest(200, "OK!!!!!");
+    logRequest(200, "SENTINEL OK!!!!!");
     return NextResponse.json({
       success: true,
       links,
