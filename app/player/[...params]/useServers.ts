@@ -1,14 +1,19 @@
-import { initialServers } from "@/lib/server-list";
+import { initialServers, RESSHIN_SERVER } from "@/lib/server-list";
 import { ServerTypes } from "@/types/player-types";
 import { useCallback, useState } from "react";
 
 export function usePlayerServers({
   defaultServerIndex,
+  resshin = false,
 }: {
   defaultServerIndex: number;
+  resshin?: boolean;
 }) {
   const isEmbedded = window.self !== window.top;
-  const [servers, setServers] = useState<ServerTypes[]>(initialServers);
+  const serverList = resshin
+    ? [RESSHIN_SERVER, ...initialServers]
+    : initialServers;
+  const [servers, setServers] = useState<ServerTypes[]>(serverList);
   const [serverIndex, setServerIndex] = useState(defaultServerIndex);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const [allFailed, setAllFailed] = useState(false);
@@ -134,7 +139,7 @@ export function usePlayerServers({
     setPlayingIndex(null);
     setServerIndex(0);
     setServers(initialServers);
-  }, []);
+  }, [serverList]);
   return {
     handleCanPlay,
     handleManualSelect,

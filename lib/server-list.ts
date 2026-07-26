@@ -1,5 +1,11 @@
 import { ServerTypes } from "@/types/player-types";
 
+export const RESSHIN_SERVER: ServerTypes = {
+  name: "Resshin (PREMIUM)",
+  server: "resshin__",
+  status: "queue",
+  desc: "Download & Multi Audio Support",
+};
 export const initialServers: ServerTypes[] = [
   // {
   //   name: "Resshin II",
@@ -7,12 +13,7 @@ export const initialServers: ServerTypes[] = [
   //   status: "queue",
   //   desc: "Download & Multi Audio Support",
   // },
-  {
-    name: "Daedalus",
-    server: "daedalus_",
-    status: "queue",
-    desc: "Alternative",
-  },
+
   {
     name: "Orion I",
     server: "orion__",
@@ -26,6 +27,12 @@ export const initialServers: ServerTypes[] = [
     status: "queue",
     desc: "4K Support",
   },
+  // {
+  //   name: "Daedalus III",
+  //   server: "daedalus_",
+  //   status: "queue",
+  //   desc: "Alternative",
+  // },
   {
     name: "Sentinel III",
     server: "sentinel__",
@@ -34,7 +41,7 @@ export const initialServers: ServerTypes[] = [
   },
 
   {
-    name: "Athena V",
+    name: "Athena IV",
     server: "athena__",
     status: "queue",
     desc: "Main Server & Multi Audio Support",

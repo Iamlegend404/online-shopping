@@ -79,6 +79,7 @@ export default function Player() {
   const language = searchParams.get("language") || "en-US";
   const subLang = searchParams.get("subLang") || "off";
   const back = searchParams.get("back") === "true";
+  const resshin = searchParams.get("resshin") === "true";
   const dubLang =
     searchParams.get("dubLang") || searchParams.get("dublang") || "";
   const dubType =
@@ -155,7 +156,7 @@ export default function Player() {
     allFailed,
     handleResetServers,
     handleMarkDub,
-  } = usePlayerServers({ defaultServerIndex });
+  } = usePlayerServers({ defaultServerIndex, resshin });
 
   const fetchServer = servers[serverIndex];
 
