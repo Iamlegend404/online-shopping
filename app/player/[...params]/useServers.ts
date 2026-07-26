@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 
 export function usePlayerServers({
   defaultServerIndex,
-  resshin = false,
+  resshin = true,
 }: {
   defaultServerIndex: number;
   resshin?: boolean;
