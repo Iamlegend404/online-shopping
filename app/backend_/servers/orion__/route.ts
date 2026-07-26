@@ -286,6 +286,14 @@ const HOLLY_WORKERS = [
   "https://flat-paper-c525.datikabanggago9.workers.dev/",
   "https://super-paper-6001.datikabanggago11.workers.dev/",
   "https://white-block-0cef.datikabanggago12.workers.dev/",
+  "https://delicate-resonance-1155.datikabanggago14.workers.dev/",
+  "https://twilight-poetry-295d.datikabanggago13.workers.dev/",
+  "https://morning-tree-8e11.datikabanggago15.workers.dev/",
+  "https://shrill-night-9970.datikabanggago16.workers.dev/",
+  "https://still-mouse-ad28.datikabanggago17.workers.dev/",
+  "https://wispy-dawn-7ed0.datikabanggago18.workers.dev/",
+  "https://fancy-mode-48d1.datikabanggago20.workers.dev/",
+  "https://curly-wind-96c9.datikabanggago19.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
