@@ -7,7 +7,12 @@ export const initialServers: ServerTypes[] = [
   //   status: "queue",
   //   desc: "Download & Multi Audio Support",
   // },
-
+  {
+    name: "Daedalus",
+    server: "daedalus_",
+    status: "queue",
+    desc: "Alternative",
+  },
   {
     name: "Orion I",
     server: "orion__",
@@ -21,14 +26,8 @@ export const initialServers: ServerTypes[] = [
     status: "queue",
     desc: "4K Support",
   },
-  // {
-  //   name: "Daedalus III",
-  //   server: "daedalus_",
-  //   status: "queue",
-  //   desc: "Alternative",
-  // },
   {
-    name: "Sentinel IV",
+    name: "Sentinel III",
     server: "sentinel__",
     status: "queue",
     desc: "K-Dramas, C-Dramas & Asian movies",
