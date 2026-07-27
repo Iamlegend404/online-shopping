@@ -1,6 +1,6 @@
 import { initialServers, RESSHIN_SERVER } from "@/lib/server-list";
 import { ServerTypes } from "@/types/player-types";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function usePlayerServers({
   defaultServerIndex,
@@ -9,7 +9,8 @@ export function usePlayerServers({
   defaultServerIndex: number;
   resshin?: boolean;
 }) {
-  const isEmbedded = window.self !== window.top;
+  const isEmbedded =
+    typeof window !== "undefined" && window.self !== window.top;
   const serverList = resshin
     ? [RESSHIN_SERVER, ...initialServers]
     : initialServers;
@@ -17,6 +18,21 @@ export function usePlayerServers({
   const [serverIndex, setServerIndex] = useState(defaultServerIndex);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const [allFailed, setAllFailed] = useState(false);
+  const [retryCooldown, setRetryCooldown] = useState(0);
+  useEffect(() => {
+    if (retryCooldown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setRetryCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [retryCooldown]);
+
+  useEffect(() => {
+    if (!allFailed) return;
+    setRetryCooldown(10);
+  }, [allFailed]);
   function handleManualSelect(i: number) {
     if (i === playingIndex) return;
     setAllFailed(false);
@@ -77,7 +93,7 @@ export function usePlayerServers({
         i === serverIndex ? { ...s, status: "failed" } : s,
       );
     });
-  }, [serverIndex]);
+  }, [serverIndex, isEmbedded]);
 
   const handleCanPlay = useCallback(() => {
     setServers((prev) =>
@@ -135,11 +151,13 @@ export function usePlayerServers({
     setPlayingIndex(null);
   }, [serverIndex]);
   const handleResetServers = useCallback(() => {
+    if (retryCooldown > 0) return;
     setAllFailed(false);
+    setRetryCooldown(0);
     setPlayingIndex(null);
     setServerIndex(0);
-    setServers(initialServers);
-  }, [serverList]);
+    setServers(serverList);
+  }, [retryCooldown, serverList]);
   return {
     handleCanPlay,
     handleManualSelect,
@@ -155,5 +173,6 @@ export function usePlayerServers({
     allFailed,
     handleResetServers,
     handleMarkDub,
+    retryCooldown,
   };
 }

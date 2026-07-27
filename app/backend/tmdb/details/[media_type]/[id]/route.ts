@@ -109,7 +109,21 @@ export async function GET(
   const url = `https://api.themoviedb.org/3/${media_type}/${id}?api_key=47a1a7df542d3d483227f758a7317dff&language=${encodeURIComponent(language)}&append_to_response=videos,credits,images,external_ids&include_image_language=${langCode},en,null`;
 
   const res = await fetch(url, { cache: "no-store" });
+
+  if (res.status === 404) {
+    return NextResponse.json({ error: "Media not found" }, { status: 404 });
+  }
+  if (!res.ok) {
+    return NextResponse.json(
+      { error: "Failed to fetch TMDB" },
+      { status: 502 },
+    );
+  }
   const data = await res.json();
+
+  if (!data.id) {
+    return NextResponse.json({ error: "Media not found" }, { status: 404 });
+  }
 
   const filtered = {
     id: data.id,

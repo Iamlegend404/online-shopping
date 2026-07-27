@@ -4,7 +4,13 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDoubleTap } from "use-double-tap";
-import { ArrowLeft, TriangleAlert, X } from "lucide-react";
+import {
+  ArrowLeft,
+  RefreshCcw,
+  RotateCw,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import { Tailspin } from "ldrs/react";
 import "ldrs/react/Tailspin.css";
 import { cn } from "@/lib/utils";
@@ -96,7 +102,8 @@ export default function Player() {
   const utcHour = new Date().getUTCHours();
   const phHour = (utcHour + 8) % 24;
   const restrictionActive = phHour >= 20 || phHour < 8; // 8pm–8am PH
-
+  const [cooldown, setCooldown] = useState(0);
+  const [retryCooldown, setRetryCooldown] = useState(0);
   // const restrictionActive = phHour >= 17 || phHour < 5;
 
   const whitelistSites = ["zxcstream"];
@@ -156,6 +163,7 @@ export default function Player() {
     allFailed,
     handleResetServers,
     handleMarkDub,
+    retryCooldown: serverCooldown,
   } = usePlayerServers({ defaultServerIndex, resshin });
 
   const fetchServer = servers[serverIndex];
@@ -166,7 +174,12 @@ export default function Player() {
   //   tmdbId,
   //   language,
   // });
-  const { data: metadata, isError: metadataError } = useTmdbDetails(
+  const {
+    data: metadata,
+    isError: isMetadataError,
+    error: metadataError,
+    refetch: refetchTmdb,
+  } = useTmdbDetails(
     media_type,
     tmdbId,
     language,
@@ -175,7 +188,7 @@ export default function Player() {
     // !isLoading && !(!isWhitelisted && isSandboxed && restrictionActive),
     !isLoading && !(!isWhitelisted && isSandboxed),
   );
-
+  const isRateLimited = metadataError?.response?.status === 429;
   const imdbId = metadata?.imdb_id || null;
   const status = metadata?.status || "";
   const backdropArray = metadata?.backdrop_paths || [];
@@ -574,7 +587,41 @@ export default function Player() {
       },
     },
   );
+  useEffect(() => {
+    if (!isRateLimited) return;
+    if (cooldown > 0) return; // Don't restart if already counting down
 
+    setCooldown(10);
+  }, [isRateLimited]);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const handleTryAgain = () => {
+    if (cooldown > 0) return;
+    handleResetServers();
+  };
+  useEffect(() => {
+    if (retryCooldown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setRetryCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [retryCooldown]);
+  const handleMetadataRetry = () => {
+    if (retryCooldown > 0) return;
+
+    setRetryCooldown(10);
+    refetchTmdb();
+  };
   // console.log(
   //   "restricted",
   //   restricted,
@@ -585,7 +632,11 @@ export default function Player() {
   // );
   // console.log(restricted && restrictionActive && isSandboxed);
   if (isLoading) {
-    return null;
+    return (
+      <div className="bg-black  h-svh flex justify-center items-center">
+        <Tailspin size="60" stroke="8" speed="2" color="white" />
+      </div>
+    );
   }
   if (!isWhitelisted && isSandboxed) {
     return (
@@ -635,7 +686,7 @@ export default function Player() {
       </div>
     );
   }
-  if (metadataError) {
+  if (isRateLimited) {
     return (
       <div
         className={cn(
@@ -645,33 +696,75 @@ export default function Player() {
         <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
         <div className="relative z-10 text-center px-4">
           <div className="space-y-2">
-            <p className="text-muted-foreground lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold">
+            <div>
+              <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
+                ༼;´༎ຶ ۝ ༎ຶ༽
+              </span>
+            </div>
+
+            <p className="lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6 landscape:mt-1">
+              Too many requests
+            </p>
+
+            <p className="text-muted-foreground lg:text-lg text-sm font-medium landscape:text-xs max-w-xl mt-3">
+              You've made too many requests too quickly. Please wait a few
+              seconds, then try again.
+            </p>
+          </div>
+          <Button
+            variant={cooldown ? "outline" : "destructive"}
+            className="mt-6"
+            onClick={handleTryAgain}
+            disabled={cooldown > 0}
+          >
+            <RotateCw className={cn(cooldown > 0 && "animate-spin")} />{" "}
+            {cooldown > 0 ? `Try Again (${cooldown}s)` : "Try Again"}
+          </Button>
+        </div>
+
+        <SocialLinks />
+      </div>
+    );
+  }
+  if (isMetadataError) {
+    return (
+      <div
+        className={cn(
+          " h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+        )}
+      >
+        <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
+        <div className="relative z-10 text-center px-4">
+          <div className="space-y-2">
+            <div>
+              <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
+                ༼;´༎ຶ ۝ ༎ຶ༽
+              </span>
+            </div>
+
+            <p className="lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6 landscape:mt-1">
               No resources found
             </p>
-            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md">
+
+            <p className="text-muted-foreground lg:text-lg text-sm font-medium landscape:text-xs max-w-xl mt-3">
               Nothing to stream here. The resource you're looking for doesn't
               exist or has been removed.
             </p>
           </div>
           <Button
             variant="outline"
-            onClick={() => router.back()}
-            className="mt-8 landscape:text-xs landscape:px-2 landscape:py-1"
+            onClick={handleMetadataRetry}
+            disabled={retryCooldown > 0}
+            className="mt-8 landscape:text-xs landscape:px-2 landscape:py-1 gap-2"
           >
-            <ArrowLeft /> Go back
+            <RefreshCcw
+              className={cn("size-4", retryCooldown > 0 && "animate-spin")}
+            />
+            {retryCooldown > 0 ? `Try Again (${retryCooldown}s)` : "Try Again"}
           </Button>
         </div>
-        <div className="absolute md:bottom-4 bottom-2 text-center md:text-sm text-xs  text-muted-foreground">
-          Having issues? join us on{" "}
-          <Link
-            href="https://discord.gg/yv7wJV97Jd"
-            target="_blank"
-            className="text-blue-400 underline hover:text-blue-300"
-          >
-            Discord
-          </Link>
-          .
-        </div>
+
+        <SocialLinks />
       </div>
     );
   }
@@ -687,44 +780,39 @@ export default function Player() {
             <ArrowLeftIcon className="absolute lg:top-4 top-3 lg:left-6 left-2 lg:size-13  md:size-10 size-8  landscape:size-5.5 text-muted-foreground z-30" />
           </button>
         )}
+
         <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
         <div className="relative z-10 text-center px-4">
           <div className="space-y-2">
-            <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
-              ༼;´༎ຶ ۝ ༎ຶ༽
-            </span>
-            <p className=" lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6">
+            <div>
+              <span className="font-bold lg:text-xl md:text-lg text-base landscape:text-sm">
+                ༼;´༎ຶ ۝ ༎ຶ༽
+              </span>
+            </div>
+
+            <p className="lg:text-2xl md:text-xl text-lg landscape:text-base -tracking-[0.04em] font-semibold mt-6 landscape:mt-1">
               All servers failed
             </p>
-            <p className="text-muted-foreground lg:text-base text-sm landscape:text-xs max-w-md">
+
+            <p className="text-muted-foreground lg:text-lg text-sm font-medium landscape:text-xs max-w-xl mt-3">
               The content may not be available yet, or the servers are currently
               failing.
             </p>
           </div>
-          <div className="flex justify-center items-center gap-3">
-            <Button
-              variant="outline"
-              className="mt-6"
-              onClick={handleResetServers}
-            >
-              Try Again
-            </Button>
-            {/* <Button className="mt-6" onClick={handleResetServers}>
-              Contact Us
-            </Button> */}
-          </div>
-        </div>
-        <div className="absolute md:bottom-4 bottom-2 text-center md:text-sm text-xs  text-muted-foreground">
-          Having issues? join us on{" "}
-          <Link
-            href="https://discord.gg/yv7wJV97Jd"
-            target="_blank"
-            className="text-blue-400 underline hover:text-blue-300"
+          <Button
+            variant="outline"
+            className="mt-6"
+            onClick={handleResetServers}
+            disabled={serverCooldown > 0}
           >
-            Discord
-          </Link>
-          .
+            <RefreshCcw className={cn(serverCooldown > 0 && "animate-spin")} />
+            {serverCooldown > 0
+              ? `Try Again (${serverCooldown}s)`
+              : "Try Again"}
+          </Button>
         </div>
+
+        <SocialLinks />
       </div>
     );
   }
@@ -976,6 +1064,43 @@ export default function Player() {
           />
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+function SocialLinks() {
+  return (
+    <div className="absolute bottom-8 right-8 flex flex-col gap-6 border p-1 bg-white/5 rounded-md">
+      <button className="text-[#5865F2] md:size-8 size-6">
+        <Link href="https://discord.gg/yv7wJV97Jd" target="_blank">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-full h-full icon icon-tabler icons-tabler-filled icon-tabler-brand-discord"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M14.983 3l.123 .006c2.014 .214 3.527 .672 4.966 1.673a1 1 0 0 1 .371 .488c1.876 5.315 2.373 9.987 1.451 12.28c-1.003 2.005 -2.606 3.553 -4.394 3.553c-.732 0 -1.693 -.968 -2.328 -2.045a21.512 21.512 0 0 0 2.103 -.493a1 1 0 1 0 -.55 -1.924c-3.32 .95 -6.13 .95 -9.45 0a1 1 0 0 0 -.55 1.924c.717 .204 1.416 .37 2.103 .494c-.635 1.075 -1.596 2.044 -2.328 2.044c-1.788 0 -3.391 -1.548 -4.428 -3.629c-.888 -2.217 -.39 -6.89 1.485 -12.204a1 1 0 0 1 .371 -.488c1.439 -1.001 2.952 -1.459 4.966 -1.673a1 1 0 0 1 .935 .435l.063 .107l.651 1.285l.137 -.016a12.97 12.97 0 0 1 2.643 0l.134 .016l.65 -1.284a1 1 0 0 1 .754 -.54l.122 -.009zm-5.983 7a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15zm6 0a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
+          </svg>
+        </Link>
+      </button>
+
+      {/* <button className="text-[#0088CC] md:size-8 size-6">
+            <Link href="https://discord.gg/yv7wJV97Jd" target="_blank">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-full h-full icon icon-tabler icons-tabler-outline icon-tabler-brand-telegram"
+              >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
+              </svg>
+            </Link>
+          </button> */}
     </div>
   );
 }

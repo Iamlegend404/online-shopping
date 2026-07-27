@@ -3,14 +3,14 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { TmdbDetailsResponse } from "./tmdb-types";
-
+import { AxiosError } from "axios";
 export function useTmdbDetails(
   mediaType: string,
   id: string,
   language: string,
   enabled = true,
 ) {
-  return useQuery<TmdbDetailsResponse>({
+  return useQuery<TmdbDetailsResponse, AxiosError>({
     queryKey: ["tmdb-details", mediaType, id, language],
     enabled: enabled && !!mediaType && !!id,
 
