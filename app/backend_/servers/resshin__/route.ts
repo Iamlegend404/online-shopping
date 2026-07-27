@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (
-      Date.now() - ts > 30000 ||
+      Date.now() - ts > 120000 ||
       !validateBackendToken(tmdbId, f_token, ts, token)
     ) {
       logRequest(403, "invalid token");

@@ -294,6 +294,28 @@ const HOLLY_WORKERS = [
   "https://wispy-dawn-7ed0.datikabanggago18.workers.dev/",
   "https://fancy-mode-48d1.datikabanggago20.workers.dev/",
   "https://curly-wind-96c9.datikabanggago19.workers.dev/",
+
+  //
+  "https://dawn-glitter-d569.wubbalubbadubdub1.workers.dev/",
+  "https://dawn-butterfly-cf4e.wubbalubbadubdub2.workers.dev/",
+  "https://aged-glitter-ff14.wubbalubbadubdub4.workers.dev/",
+  "https://cold-dust-67b4.wubbalubbadubdub3.workers.dev/",
+  "https://weathered-bonus-4c38.wubbalubbadubdub5.workers.dev/",
+  "https://damp-dew-0cf6.wubbalubbadubdub6.workers.dev/",
+  "https://late-voice-46fe.wubbalubbadubdub8.workers.dev/",
+  "https://sparkling-unit-41dd.wubbalubbadubdub7.workers.dev/",
+  "https://small-credit-b431.wubbalubbadubdub9.workers.dev/",
+  "https://silent-unit-7d42.wubbalubbadubdub10.workers.dev/",
+  "https://icy-shape-463d.wubbalubbadubdub11.workers.dev/",
+  "https://mute-disk-13fc.wubbalubbadubdub12.workers.dev/",
+  "https://steep-wood-b1cc.wubbalubbadubdub13.workers.dev/",
+  "https://autumn-bar-07db.wubbalubbadubdub14.workers.dev/",
+  "https://cool-sun-dbbc.wubbalubbadubdub16.workers.dev/",
+  "https://polished-resonance-a78f.wubbalubbadubdub15.workers.dev/",
+  "https://shy-hill-e858.wubbalubbadubdub17.workers.dev/",
+  "https://patient-smoke-9421.wubbalubbadubdub18.workers.dev/",
+  "https://empty-meadow-7845.wubbalubbadubdub19.workers.dev/",
+  "https://white-rice-8ff0.wubbalubbadubdub20.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -369,7 +391,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (Date.now() - ts > 8000) {
+    if (Date.now() - ts > 120000) {
       logRequest(403, "token expired");
       return NextResponse.json(
         { success: false, error: "Invalid token" },

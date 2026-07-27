@@ -299,7 +299,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (Date.now() - ts > 30000) {
+    if (Date.now() - ts > 120000) {
       logRequest(403, "token expired");
       return NextResponse.json(
         { success: false, error: "Invalid token" },
