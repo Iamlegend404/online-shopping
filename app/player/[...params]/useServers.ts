@@ -11,8 +11,9 @@ export function usePlayerServers({
 }) {
   const isEmbedded =
     typeof window !== "undefined" && window.self !== window.top;
-  const serverList = [RESSHIN_SERVER, ...initialServers];
-
+  const serverList = resshin
+    ? [RESSHIN_SERVER, ...initialServers]
+    : initialServers;
   const [servers, setServers] = useState<ServerTypes[]>(serverList);
   const [serverIndex, setServerIndex] = useState(defaultServerIndex);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
