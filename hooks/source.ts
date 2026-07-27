@@ -197,11 +197,6 @@ function buildSourceURL({
   if (imdbId) {
     params.append(FIELD_MAP.imdbId, imdbId);
   }
-
-  if (server === "beta") {
-    return `https://snowy-mountain-f5ee.wubbalubbadubdub19.workers.dev/`;
-  }
-
   // params.append("dub", "tl");
   return `/backend_/servers/${server}?${params.toString()}`;
 }
