@@ -605,8 +605,10 @@ export default function Player() {
 
   const handleTryAgain = () => {
     if (cooldown > 0) return;
-    handleResetServers();
+    setCooldown(0);
+    refetchTmdb();
   };
+
   useEffect(() => {
     if (retryCooldown <= 0) return;
 
