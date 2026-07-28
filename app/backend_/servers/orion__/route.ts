@@ -54,7 +54,16 @@ const GOOD_HEADERS = {
 };
 const HOLLY_WORKERS = [
   "https://purple-thunder-0eb4.wubbalubbadubdub19.workers.dev/",
-  // "https://white-rice-8ff0.wubbalubbadubdub20.workers.dev/",
+  "https://square-dust-80f5.wubbalubbadubdub02.workers.dev/",
+  "https://curly-bird-930d.wubbalubbadubdub01.workers.dev/",
+  "https://patient-wildflower-6f28.wubbalubbadubdub03.workers.dev/",
+  "https://black-meadow-49fd.wubbalubbadubdub04.workers.dev/",
+  "https://tight-block-7a4d.wubbalubbadubdub05.workers.dev/",
+  "https://curly-mud-ddfd.wubbalubbadubdub06.workers.dev/",
+  "https://empty-math-17a7.wubbalubbadubdub07.workers.dev/",
+  "https://white-bread-be62.wubbalubbadubdub08.workers.dev/",
+  "https://blue-sun-21d4.wubbalubbadubdub09.workers.dev/",
+  "https://young-feather-228d.wubbalubbadubdub010.workers.dev/",
 ];
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
