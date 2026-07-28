@@ -51,11 +51,12 @@ function getCorsOrigin(req) {
   return null; // browser request from unknown origin, block
 }
 
-function getHeaders(url) {
+async function getHeaders(url, cryptoKey) {
   const raw = url.searchParams.get("h");
   if (!raw) return { error: 'Missing "h" param' };
   try {
-    return { headers: JSON.parse(raw) };
+    const decrypted = await decryptUrl(raw, cryptoKey);
+    return { headers: JSON.parse(decrypted) };
   } catch {
     return { error: "Invalid headers token" };
   }
@@ -120,11 +121,11 @@ async function handleScrape(url) {
   return json({ slug, pageUrl, streamkey, nonce, imdbid, qualities });
 }
 
-async function handleResolve(url) {
+async function handleResolve(url, cryptoKey) {
   const embedUrl = url.searchParams.get("embed_url");
   if (!embedUrl) return json({ error: 'Missing "embed_url"' }, 400);
 
-  const { headers, error } = getHeaders(url);
+  const { headers, error } = await getHeaders(url, cryptoKey);
   if (error) return json({ error }, 400);
 
   const fullEmbedUrl = embedUrl.startsWith("http")
@@ -189,13 +190,78 @@ async function handleResolve(url) {
   return json({ embed_id: embedId, csrf_token: csrfToken, sources });
 }
 
-async function handleProxy(url, request) {
+function toBase64Url(bytes) {
+  let str = "";
+  for (const b of bytes) str += String.fromCharCode(b);
+
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function fromBase64Url(str) {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+
+  while (str.length % 4) str += "=";
+
+  const bin = atob(str);
+
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
+async function getCryptoKey(aesKey) {
+  const keyBytes = Uint8Array.from(
+    aesKey.match(/.{2}/g).map((b) => parseInt(b, 16)),
+  );
+
+  return crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, [
+    "encrypt",
+    "decrypt",
+  ]);
+}
+
+async function encryptUrl(url, cryptoKey) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    new TextEncoder().encode(url),
+  );
+
+  const out = new Uint8Array(iv.length + encrypted.byteLength);
+
+  out.set(iv, 0);
+  out.set(new Uint8Array(encrypted), iv.length);
+
+  return toBase64Url(out);
+}
+
+async function decryptUrl(data, cryptoKey) {
+  const bytes = fromBase64Url(data);
+
+  const iv = bytes.slice(0, 12);
+  const ciphertext = bytes.slice(12);
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    ciphertext,
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
+async function handleProxy(url, request, cryptoKey) {
   const data = url.searchParams.get("data");
   if (!data) return json({ error: 'Missing "data" param' }, 400);
 
-  const decoded = data;
+  let decoded;
+  try {
+    decoded = await decryptUrl(data, cryptoKey);
+  } catch {
+    return json({ error: "Invalid token" }, 403);
+  }
 
-  const { headers, error } = getHeaders(url);
+  const { headers, error } = await getHeaders(url, cryptoKey);
   if (error) return json({ error }, 400);
 
   const res = await fetch(decoded, {
@@ -219,16 +285,19 @@ async function handleProxy(url, request) {
     const baseDir =
       base.origin +
       base.pathname.substring(0, base.pathname.lastIndexOf("/") + 1);
-    const h = url.searchParams.get("h");
-    const lines = (await res.text()).split("\n").map((line) => {
-      const t = line.trim();
-      if (!t || t.startsWith("#")) return line;
-      let abs = t;
-      if (t.startsWith("//")) abs = "https:" + t;
-      else if (t.startsWith("/")) abs = base.origin + t;
-      else if (!t.startsWith("http")) abs = baseDir + t;
-      return `${url.origin}/proxy?data=${encodeURIComponent(abs)}&h=${encodeURIComponent(h)}`;
-    });
+    const encryptedH = url.searchParams.get("h");
+    const lines = await Promise.all(
+      (await res.text()).split("\n").map(async (line) => {
+        const t = line.trim();
+        if (!t || t.startsWith("#")) return line;
+        let abs = t;
+        if (t.startsWith("//")) abs = "https:" + t;
+        else if (t.startsWith("/")) abs = base.origin + t;
+        else if (!t.startsWith("http")) abs = baseDir + t;
+        const encrypted = await encryptUrl(abs, cryptoKey);
+        return `${url.origin}/proxy?data=${encodeURIComponent(encrypted)}&h=${encodeURIComponent(encryptedH)}`;
+      }),
+    );
 
     return new Response(lines.join("\n"), {
       headers: {
@@ -276,9 +345,10 @@ export default {
 
     const url = new URL(request.url);
     const pathname = url.pathname;
+    const cryptoKey = await getCryptoKey(env.AES_KEY);
     if (pathname === "/scrape") return handleScrape(url);
-    if (pathname === "/resolve") return handleResolve(url);
-    if (pathname === "/proxy") return handleProxy(url, request);
+    if (pathname === "/resolve") return handleResolve(url, cryptoKey);
+    if (pathname === "/proxy") return handleProxy(url, request, cryptoKey);
 
     return json({
       routes: {

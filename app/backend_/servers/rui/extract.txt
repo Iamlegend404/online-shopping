@@ -1,0 +1,72 @@
+import { NextResponse } from "next/server";
+
+function decryptFile(encrypted: string) {
+  const binary = Buffer.from(encrypted, "base64");
+  const key = binary.subarray(0, 38);
+  const data = binary.subarray(38);
+  const decrypted = Buffer.alloc(data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    decrypted[i] = data[i] ^ key[i % key.length];
+  }
+
+  return JSON.parse(decrypted.toString("utf8"));
+}
+
+function extractM3u8(fileField: string) {
+  const results: Record<string, string> = {};
+  const parts = fileField.split(",");
+
+  for (const part of parts) {
+    const match = part.match(/\[([^\]]+)\](https:\/\/[^\s]+?\.m3u8)/);
+    if (match) {
+      results[match[1]] = match[2];
+    }
+  }
+  return results;
+}
+
+export async function GET() {
+  const response = await fetch(
+    "https://player.kinoton.cc/embed/ae2caeecc065b034a838b46e1dbb2471",
+    {
+      headers: {
+        "Accept-Language": "en-US,en;q=0.7",
+        Cookie:
+          "cf_clearance=hZdey.I6IFmiLKMmbyfiFeHmZEYUH0Y8kyCtinRLADM-1785214448-1.2.1.1-qoCLVqfVzTKDa6iV4_lblXBXKpJUefOQ1I6oJ4xNNrDtRT5HylaLiBP.o63I5CSn9G_pa5UvT07vGGrhe9EIcXIgYhngMQQ15REmvhTeyge8UwC_mrMwK19hJdndWYnt4IEazRGH3_BBo8l7EWLVgeGOLYdqpVuQFAxFycVEw3LC3OLH7Sz_vVqU1sBGuxT33smvhSVa1srBb34yZmgn8iRwhUTWvnKvzaMSKlU1d_tPNzBebNryEWVZPEePin6xwmDVBeWkrWug1zUopeXxWVLiNz_Dhdmw0p4PNFIlFwD5j09jk2xpc63CbYe.6Jme_cJxioC8bAhqb8naTAC0nEetBvodRr2h4kWk.t5n.Ow",
+        Priority: "u=0, i",
+        Referer: "https://kinogo-films.vip/",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+      },
+      redirect: "follow",
+      cache: "no-store",
+    },
+  );
+
+  const html = await response.text();
+
+  const match = html.match(/"file":"([^"]+)"/);
+  if (!match) {
+    return NextResponse.json({ error: "file not found" }, { status: 404 });
+  }
+
+  const playlist = decryptFile(match[1]);
+
+  //   const result = playlist.map((item: any) => ({
+  //     id: item.id,
+  //     title: item.title?.replace(/<[^>]*>/g, "").trim(),
+  //     duration: item.duration,
+  //     qualities: extractM3u8(item.file),
+  //   }));
+  const result = playlist
+    .filter((item: any) => item.id === 381)
+    .map((item: any) => ({
+      id: item.id,
+      title: item.title?.replace(/<[^>]*>/g, "").trim(),
+      duration: item.duration,
+      qualities: extractM3u8(item.file),
+    }));
+
+  return NextResponse.json(result);
+}

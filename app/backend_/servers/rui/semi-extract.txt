@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from "next/server";
+
+function decryptFile(encrypted: string) {
+  const binary = Buffer.from(encrypted, "base64");
+  const key = binary.subarray(0, 38);
+  const data = binary.subarray(38);
+  const decrypted = Buffer.alloc(data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    decrypted[i] = data[i] ^ key[i % key.length];
+  }
+
+  return JSON.parse(decrypted.toString("utf8"));
+}
+
+function extractM3u8(fileField: string) {
+  const results: Record<string, string> = {};
+  const parts = fileField.split(",");
+
+  for (const part of parts) {
+    const match = part.match(/\[([^\]]+)\](https:\/\/[^\s]+?\.m3u8)/);
+    if (match) {
+      results[match[1]] = match[2];
+    }
+  }
+  return results;
+}
+
+export async function GET(req: NextRequest) {
+  const url = req.nextUrl.searchParams.get("url");
+
+  if (!url) {
+    return NextResponse.json(
+      { error: "Failed to fetch servers" },
+      { status: 403 },
+    );
+  }
+  // 1. Get the embed URLs from Python
+  const serversRes = await fetch(`http://127.0.0.1:8000/servers?url=${url}`, {
+    cache: "no-store",
+  });
+
+  if (!serversRes.ok) {
+    return NextResponse.json(
+      { error: "Failed to fetch servers" },
+      { status: 500 },
+    );
+  }
+
+  const servers = await serversRes.json();
+
+  // 2. Pick the KINOGO player
+  const kinogo = servers.find(
+    (s: any) => s.name === "KINOGO" || s.provider === "8",
+  );
+
+  if (!kinogo) {
+    return NextResponse.json(
+      { error: "KINOGO server not found" },
+      { status: 404 },
+    );
+  }
+
+  // 3. Fetch the actual embed page
+  const response = await fetch(kinogo.url, {
+    headers: {
+      "Accept-Language": "en-US,en;q=0.7",
+      Referer: "https://kinogo-films.vip/",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+    },
+    redirect: "follow",
+    cache: "no-store",
+  });
+
+  const html = await response.text();
+
+  const match = html.match(/"file":"([^"]+)"/);
+
+  if (!match) {
+    return NextResponse.json({ error: "file not found" }, { status: 404 });
+  }
+
+  const playlist = decryptFile(match[1]);
+
+  const result = playlist
+    .filter((item: any) => item.id === 381)
+    .map((item: any) => ({
+      id: item.id,
+      title: item.title?.replace(/<[^>]*>/g, "").trim(),
+      duration: item.duration,
+      qualities: extractM3u8(item.file),
+    }));
+
+  return NextResponse.json(result);
+}

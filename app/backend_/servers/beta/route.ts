@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const URL =
-  "https://snowy-mountain-f5ee.wubbalubbadubdub19.workers.dev/?url=https://vimeos.net/embed-rlyt6ovw7ngz.html";
+  "https://snowy-mountain-f5ee.wubbalubbadubdub19.workers.dev/?url=https://vimeos.net/embed-h26stj6gmvrt.html";
 
 export async function GET() {
   try {
