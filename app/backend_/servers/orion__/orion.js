@@ -206,7 +206,17 @@ async function handleProxy(url, request) {
         : {}),
     },
   });
-
+  if (!res.ok) {
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        ...(res.headers.get("Content-Type")
+          ? { "Content-Type": res.headers.get("Content-Type") }
+          : {}),
+      },
+    });
+  }
   const ct = res.headers.get("content-type") || "application/octet-stream";
   const isPlaylist =
     ct.includes("mpegurl") ||
