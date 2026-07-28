@@ -13,20 +13,19 @@ export const initialServers: ServerTypes[] = [
   //   status: "queue",
   //   desc: "Download & Multi Audio Support",
   // },
-
   {
-    name: "Orion I",
+    name: "Berkas I",
+    server: "berkas__",
+    status: "queue",
+    desc: "4K Support",
+  },
+  {
+    name: "Orion II",
     server: "orion__",
     status: "queue",
     desc: "Built-In Subtitle",
   },
 
-  {
-    name: "Berkas II",
-    server: "berkas__",
-    status: "queue",
-    desc: "4K Support",
-  },
   // {
   //   name: "Daedalus III",
   //   server: "daedalus_",
