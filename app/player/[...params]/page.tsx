@@ -215,8 +215,9 @@ export default function Player() {
   const metadataLoad = !!tmdbId && !!metadata && !!title;
   const {
     data: source,
-    error: sourceError,
+    error: isSourceError,
     isLoading: sourceLoading,
+    error: sourceError,
   } = useSource({
     media_type,
     tmdbId,
@@ -231,7 +232,7 @@ export default function Player() {
     dubCode: dub || dubLang,
     dubType: dub || dubLang ? (dub ? type : dubType) : "",
   });
-
+  const isSourceRateLimited = sourceError?.response?.status === 429;
   // const { data: subtitles = [], isLoading: subtitlesLoading } = useSubtitle({
   //   tmdbId,
   //   media_type,
@@ -345,7 +346,7 @@ export default function Player() {
     };
   }, [serverIndex]);
   useEffect(() => {
-    if (sourceError || source?.links.length === 0) {
+    if (isSourceError || source?.links.length === 0) {
       queryClient.removeQueries({
         queryKey: [
           "get-source",
@@ -361,7 +362,7 @@ export default function Player() {
       });
       handleServerFail();
     }
-  }, [source?.links, sourceError]);
+  }, [source?.links, isSourceError]);
 
   // default dub effect
   useEffect(() => {
@@ -688,7 +689,7 @@ export default function Player() {
       </div>
     );
   }
-  if (isRateLimited) {
+  if (isRateLimited || isSourceRateLimited) {
     return (
       <div
         className={cn(

@@ -2,6 +2,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { MediaOption } from "./open-subtitle";
 import { generateFrontendToken, FIELD_MAP } from "@/lib/token";
+import { AxiosError } from "axios";
 export interface QualityTrack {
   resolution?: number;
   format?: string;
@@ -64,7 +65,7 @@ export default function useSource(
     enable,
   } = params;
 
-  return useQuery<SourceTypes>({
+  return useQuery<SourceTypes, AxiosError>({
     queryKey: [
       "get-source",
       tmdbId,
