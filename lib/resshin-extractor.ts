@@ -1060,14 +1060,29 @@ export async function extractResshin(
       },
     );
   }
-
-  const links = sortedDownloads.map((q: any) => ({
-    resolution: q.resolution,
-    format: q.format,
-    size: q.size,
-    type: (q.url ?? "").includes(".m3u8") ? ("hls" as const) : ("mp4" as const),
-    link: `https://proxy.zxcstream.xyz/proxy?url=${encodeURIComponent(q.url)}`,
-  }));
+  const PREFERRED_ORDER = ["720", "480", "1080", "360"];
+  // const links = sortedDownloads.map((q: any) => ({
+  //   resolution: q.resolution,
+  //   format: q.format,
+  //   size: q.size,
+  //   type: (q.url ?? "").includes(".m3u8") ? ("hls" as const) : ("mp4" as const),
+  //   link: `https://proxy.zxcstream.xyz/proxy?url=${encodeURIComponent(q.url)}`,
+  // }));
+  const links = PREFERRED_ORDER.map((res) =>
+    sortedDownloads.find(
+      (q: any) => String(q.resolution).replace(/p$/i, "") === res,
+    ),
+  )
+    .filter(Boolean)
+    .map((q: any) => ({
+      resolution: q.resolution,
+      format: q.format,
+      size: q.size,
+      type: (q.url ?? "").includes(".m3u8")
+        ? ("hls" as const)
+        : ("mp4" as const),
+      link: `https://proxy.zxcstream.xyz/proxy?url=${encodeURIComponent(q.url)}`,
+    }));
 
   const active = dubs.find((d: any) => d.lanCode === activeDubLang) ?? dubs[0];
 
