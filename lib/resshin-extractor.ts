@@ -463,7 +463,7 @@ export async function extractResshin(
       format: q.format,
       size: q.size,
       type: q.url.includes(".m3u8") ? "hls" : "mp4",
-      link: `/backend_/servers/resshin_/proxy?url=${encodeURIComponent(q.url)}`,
+      link: `https://zxcstream.xyz/proxy?url=${encodeURIComponent(q.url)}`,
     })),
     subtitles: [],
     dubs: dubs.map((d: any) => ({

@@ -111,3 +111,231 @@ export async function GET() {
     );
   }
 }
+///////////////////////////////////////////
+import { FIELD_MAP } from "@/lib/token";
+import { validateBackendToken } from "@/lib/validate-token";
+import { NextRequest, NextResponse } from "next/server";
+
+const HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+  Accept: "application/json, text/javascript, */*; q=0.01",
+  "X-Requested-With": "XMLHttpRequest",
+  Origin: "https://hdrezka-home.tv",
+  Referer: "https://hdrezka-home.tv/",
+  Cookie:
+    "techaro.lol-anubis-cookie-verification=019fac37-ba5c-77ba-96b6-9f1dd3ca98c5; techaro.lol-anubis-auth=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhY3Rpb24iOiJDSEFMTEVOR0UiLCJjaGFsbGVuZ2UiOiIwMTlmYWMzNy1iYTVjLTc3YmEtOTZiNi05ZjFkZDNjYTk4YzUiLCJleHAiOjE3ODc4OTI3NjIsImlhdCI6MTc4NTMwMDc2MiwibWV0aG9kIjoiZmFzdCIsIm5iZiI6MTc4NTMwMDcwMiwicG9saWN5UnVsZSI6ImFjOTgwZjQ5YzRkMzVmYWIiLCJyZXN0cmljdGlvbiI6IjJkODZmMGMzZjRiYTg1ODY5NzA5NDQ4NzhhMjM0MDQ0YzI4YjE3Y2JlMDkzYTg1MzI0Y2NjNzMwZDM4ZDZmMDcifQ.Od_JSvTDyVrYDlDSmFUZbiw7s_owH0ZwLv_js-qE5Jhb7RIaUrp2Fp9ZIGh3_kEb29lYIrUzvhFrZNTZZPLfAg; PHPSESSID=t1l02sl6tdg6m7o17li5ff0nuu; dle_user_taken=1; dle_user_token=80595b3c0d2a6b8e3419d53881169808; _vc_id=E_rgXBIoJm-r96q6wFL7tLbcGh0TKth2; _vc_day=2026-07-29",
+};
+
+async function searchId(query: string): Promise<{
+  id: string;
+  title: string;
+  url: string;
+} | null> {
+  const form = new URLSearchParams({ q: query });
+
+  const res = await fetch("https://hdrezka-home.tv/engine/ajax/search.php", {
+    method: "POST",
+    headers: {
+      ...HEADERS,
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    body: form.toString(),
+  });
+
+  if (!res.ok) return null;
+
+  const html = await res.text();
+
+  // First result link: /films/.../2259-interstellar-2014.html
+  const match = html.match(
+    /href="(https:\/\/hdrezka-home\.tv\/[^"]+\/(\d+)-[^"]+\.html)"[^>]*>[\s\S]*?<span class="enty">([^<]+)<\/span>/,
+  );
+
+  if (!match) return null;
+
+  return {
+    url: match[1],
+    id: match[2],
+    title: match[3].trim(),
+  };
+}
+
+function qualityToResolution(quality: string): number {
+  const q = quality.toLowerCase();
+  if (q.includes("1080")) return 3;
+  if (q.includes("720")) return 2;
+  if (q.includes("480")) return 1;
+  if (q.includes("360")) return 0;
+  // fallback: try to extract number
+  const num = parseInt(q.replace(/\D/g, ""), 10);
+  if (num >= 1080) return 3;
+  if (num >= 720) return 2;
+  if (num >= 480) return 1;
+  return 0;
+}
+
+export async function GET(req: NextRequest) {
+  const logRequest = (status: number, reason: string) => {
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
+    const mediaType = req.nextUrl.searchParams.get("b");
+    const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
+    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
+    const extra = mediaType === "tv" ? `/${season}/${episode}` : "";
+
+    const ip =
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+
+    console.log(
+      `[BERKAS] ${tmdbId}/${mediaType}${extra} | ${status} | ${reason} | IP: ${ip}`,
+    );
+  };
+  try {
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
+    const mediaType = req.nextUrl.searchParams.get("b");
+    const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
+    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
+    const title = req.nextUrl.searchParams.get(FIELD_MAP.title);
+    const year = req.nextUrl.searchParams.get(FIELD_MAP.year);
+    const ts = Number(req.nextUrl.searchParams.get(FIELD_MAP.ts));
+    const token = req.nextUrl.searchParams.get(FIELD_MAP.token)!;
+    const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!;
+
+    if (!tmdbId || !mediaType || !title || !year || !ts || !token) {
+      logRequest(404, "missing params");
+      return NextResponse.json(
+        { success: false, error: "need token" },
+        { status: 404 },
+      );
+    }
+
+    if (Date.now() - ts > 120000) {
+      logRequest(403, "token expired");
+      return NextResponse.json(
+        { success: false, error: "Invalid token" },
+        { status: 403 },
+      );
+    }
+
+    if (!validateBackendToken(tmdbId, f_token, ts, token)) {
+      logRequest(403, "invalid token");
+      return NextResponse.json(
+        { success: false, error: "Invalid token" },
+        { status: 403 },
+      );
+    }
+
+    // 1. Search → get ID
+    const found = await searchId(title);
+    if (!found) {
+      return NextResponse.json(
+        { success: false, error: `No results for "${title}"` },
+        { status: 404 },
+      );
+    }
+
+    // 2. Fetch English original streams (translator_id=238)
+    const form = new URLSearchParams({
+      id: found.id,
+      translator_id: "238",
+      is_camrip: "0",
+      is_ads: "0",
+      is_director: "0",
+      favs: "be567b24-5253-4e0c-9dcb-a0a42f023799",
+      action: "get_movie",
+    });
+
+    const streamRes = await fetch(
+      `https://hdrezka-home.tv/ajax/get_cdn_series/?t=${Date.now()}`,
+      {
+        method: "POST",
+        headers: {
+          ...HEADERS,
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          Referer: found.url,
+        },
+        body: form.toString(),
+      },
+    );
+
+    if (!streamRes.ok) {
+      return NextResponse.json(
+        { success: false, error: `Stream request failed: ${streamRes.status}` },
+        { status: streamRes.status },
+      );
+    }
+
+    const data = await streamRes.json();
+
+    if (!data.success || !data.url) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: data.message || "No streams (maybe no original audio)",
+        },
+        { status: 404 },
+      );
+    }
+
+    // Parse streams
+    const streamRegex =
+      /\[(.*?)\](https?:\/\/[^\s,"]+)(?:\s+or\s+(https?:\/\/[^\s,"]+))?/g;
+
+    const streams: {
+      quality: string;
+      hls: string | null;
+      mp4: string | null;
+    }[] = [];
+
+    let m: RegExpExecArray | null;
+    while ((m = streamRegex.exec(data.url)) !== null) {
+      const quality = m[1].replace(/<[^>]+>/g, "").trim();
+      const first = m[2];
+      const second = m[3] ?? null;
+
+      streams.push({
+        quality,
+        hls: first.includes(":hls:manifest.m3u8") ? first : second,
+        mp4: first.includes(":hls:manifest.m3u8") ? second : first,
+      });
+    }
+
+    // Parse subtitles
+    const subtitleRegex = /\[(.*?)\](https?:\/\/[^\s,"]+)/g;
+    const subtitles: { language: string; url: string }[] = [];
+
+    if (data.subtitle) {
+      while ((m = subtitleRegex.exec(data.subtitle)) !== null) {
+        subtitles.push({ language: m[1], url: m[2] });
+      }
+    }
+
+    // Build links array (HLS only), sorted highest resolution first
+    const links = streams
+      .filter((s) => s.hls)
+      .map((s) => ({
+        type: "hls" as const,
+        link: s.hls!,
+        resolution: qualityToResolution(s.quality),
+      }))
+      .sort((a, b) => b.resolution - a.resolution);
+
+    return NextResponse.json({
+      success: true,
+      links,
+      subtitles: [],
+      meow: true,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown error",
+      },
+      { status: 500 },
+    );
+  }
+}

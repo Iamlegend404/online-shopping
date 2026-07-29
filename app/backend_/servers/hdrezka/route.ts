@@ -1,5 +1,3 @@
-import { FIELD_MAP } from "@/lib/token";
-import { validateBackendToken } from "@/lib/validate-token";
 import { NextRequest, NextResponse } from "next/server";
 
 const HEADERS = {
@@ -10,7 +8,7 @@ const HEADERS = {
   Origin: "https://hdrezka-home.tv",
   Referer: "https://hdrezka-home.tv/",
   Cookie:
-    "techaro.lol-anubis-cookie-verification=019fac37-ba5c-77ba-96b6-9f1dd3ca98c5; techaro.lol-anubis-auth=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhY3Rpb24iOiJDSEFMTEVOR0UiLCJjaGFsbGVuZ2UiOiIwMTlmYWMzNy1iYTVjLTc3YmEtOTZiNi05ZjFkZDNjYTk4YzUiLCJleHAiOjE3ODc4OTI3NjIsImlhdCI6MTc4NTMwMDc2MiwibWV0aG9kIjoiZmFzdCIsIm5iZiI6MTc4NTMwMDcwMiwicG9saWN5UnVsZSI6ImFjOTgwZjQ5YzRkMzVmYWIiLCJyZXN0cmljdGlvbiI6IjJkODZmMGMzZjRiYTg1ODY5NzA5NDQ4NzhhMjM0MDQ0YzI4YjE3Y2JlMDkzYTg1MzI0Y2NjNzMwZDM4ZDZmMDcifQ.Od_JSvTDyVrYDlDSmFUZbiw7s_owH0ZwLv_js-qE5Jhb7RIaUrp2Fp9ZIGh3_kEb29lYIrUzvhFrZNTZZPLfAg; PHPSESSID=t1l02sl6tdg6m7o17li5ff0nuu; dle_user_taken=1; dle_user_token=80595b3c0d2a6b8e3419d53881169808; _vc_id=E_rgXBIoJm-r96q6wFL7tLbcGh0TKth2; _vc_day=2026-07-29",
+    "techaro.lol-anubis-auth=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhY3Rpb24iOiJDSEFMTEVOR0UiLCJjaGFsbGVuZ2UiOiIwMTlmYWMzNy1iYTVjLTc3YmEtOTZiNi05ZjFkZDNjYTk4YzUiLCJleHAiOjE3ODc4OTI3NjIsImlhdCI6MTc4NTMwMDc2MiwibWV0aG9kIjoiZmFzdCIsIm5iZiI6MTc4NTMwMDcwMiwicG9saWN5UnVsZSI6ImFjOTgwZjQ5YzRkMzVmYWIiLCJyZXN0cmljdGlvbiI6IjJkODZmMGMzZjRiYTg1ODY5NzA5NDQ4NzhhMjM0MDQ0YzI4YjE3Y2JlMDkzYTg1MzI0Y2NjNzMwZDM4ZDZmMDcifQ.Od_JSvTDyVrYDlDSmFUZbiw7s_owH0ZwLv_js-qE5Jhb7RIaUrp2Fp9ZIGh3_kEb29lYIrUzvhFrZNTZZPLfAg; PHPSESSID=t1l02sl6tdg6m7o17li5ff0nuu; dle_user_taken=1; dle_user_token=80595b3c0d2a6b8e3419d53881169808; _vc_id=E_rgXBIoJm-r96q6wFL7tLbcGh0TKth2; _vc_day=2026-07-29",
 };
 
 async function searchId(query: string): Promise<{
@@ -47,78 +45,22 @@ async function searchId(query: string): Promise<{
   };
 }
 
-function qualityToResolution(quality: string): number {
-  const q = quality.toLowerCase();
-  if (q.includes("1080")) return 3;
-  if (q.includes("720")) return 2;
-  if (q.includes("480")) return 1;
-  if (q.includes("360")) return 0;
-  // fallback: try to extract number
-  const num = parseInt(q.replace(/\D/g, ""), 10);
-  if (num >= 1080) return 3;
-  if (num >= 720) return 2;
-  if (num >= 480) return 1;
-  return 0;
-}
-
 export async function GET(req: NextRequest) {
-  const logRequest = (status: number, reason: string) => {
-    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
-    const mediaType = req.nextUrl.searchParams.get("b");
-    const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
-    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
-    const extra = mediaType === "tv" ? `/${season}/${episode}` : "";
-
-    const ip =
-      req.headers.get("cf-connecting-ip") ||
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-
-    console.log(
-      `[BERKAS] ${tmdbId}/${mediaType}${extra} | ${status} | ${reason} | IP: ${ip}`,
-    );
-  };
   try {
-    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id);
-    const mediaType = req.nextUrl.searchParams.get("b");
-    const season = req.nextUrl.searchParams.get(FIELD_MAP.season);
-    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode);
-    const title = req.nextUrl.searchParams.get(FIELD_MAP.title);
-    const year = req.nextUrl.searchParams.get(FIELD_MAP.year);
-    const ts = Number(req.nextUrl.searchParams.get(FIELD_MAP.ts));
-    const token = req.nextUrl.searchParams.get(FIELD_MAP.token)!;
-    const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!;
+    const q = req.nextUrl.searchParams.get("q")?.trim();
 
-    if (!tmdbId || !mediaType || !title || !year || !ts || !token) {
-      logRequest(404, "missing params");
+    if (!q) {
       return NextResponse.json(
-        { success: false, error: "need token" },
-        { status: 404 },
-      );
-    }
-
-    if (Date.now() - ts > 120000) {
-      logRequest(403, "token expired");
-      return NextResponse.json(
-        { success: false, error: "Invalid token" },
-        { status: 403 },
-      );
-    }
-
-    if (!validateBackendToken(tmdbId, f_token, ts, token)) {
-      logRequest(403, "invalid token");
-      return NextResponse.json(
-        { success: false, error: "Invalid token" },
-        { status: 403 },
+        { error: "Missing ?q= search query" },
+        { status: 400 },
       );
     }
 
     // 1. Search → get ID
-    const found = await searchId(title);
+    const found = await searchId(q);
     if (!found) {
       return NextResponse.json(
-        { success: false, error: `No results for "${title}"` },
+        { error: `No results for "${q}"` },
         { status: 404 },
       );
     }
@@ -149,7 +91,7 @@ export async function GET(req: NextRequest) {
 
     if (!streamRes.ok) {
       return NextResponse.json(
-        { success: false, error: `Stream request failed: ${streamRes.status}` },
+        { error: `Stream request failed: ${streamRes.status}` },
         { status: streamRes.status },
       );
     }
@@ -159,8 +101,9 @@ export async function GET(req: NextRequest) {
     if (!data.success || !data.url) {
       return NextResponse.json(
         {
-          success: false,
           error: data.message || "No streams (maybe no original audio)",
+          id: found.id,
+          title: found.title,
         },
         { status: 404 },
       );
@@ -199,28 +142,22 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Build links array (HLS only), sorted highest resolution first
-    const links = streams
-      .filter((s) => s.hls)
-      .map((s) => ({
-        type: "hls" as const,
-        link: s.hls!,
-        resolution: qualityToResolution(s.quality),
-      }))
-      .sort((a, b) => b.resolution - a.resolution);
+    const englishSub = subtitles.find(
+      (s) => s.language.toLowerCase() === "english",
+    );
 
     return NextResponse.json({
-      success: true,
-      links,
-      subtitles: [],
-      meow: true,
+      id: found.id,
+      title: found.title,
+      url: found.url,
+      streams,
+      subtitles,
+      defaultSubtitle: englishSub?.url ?? null,
+      quality: data.quality,
     });
   } catch (err) {
     return NextResponse.json(
-      {
-        success: false,
-        error: err instanceof Error ? err.message : "Unknown error",
-      },
+      { error: err instanceof Error ? err.message : "Unknown error" },
       { status: 500 },
     );
   }
