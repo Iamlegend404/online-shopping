@@ -405,9 +405,10 @@ export async function getWorkingProxy(activeProxies: string[]) {
   return null;
 }
 const priority = (file: string) => {
-  if (file.includes("/pl/")) return 0;
-  if (file.includes("/streamsvr/")) return 1;
-  if (file.includes("tripplestream.online")) return 2;
+  if (file.includes("tripplestream.online")) return 0;
+  if (file.includes("/pl/")) return 1;
+  if (file.includes("/streamsvr/")) return 2;
+
   return 3;
 };
 export async function GET(req: NextRequest) {
