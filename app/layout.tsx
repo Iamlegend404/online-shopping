@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   description: "Stream or download movies and TV by TMDB ID.",
   applicationName: "ZXC[STREAM]",
   authors: [{ name: "ZXC[STREAM]" }],
-  referrer: "no-referrer",
+  referrer: "strict-origin-when-cross-origin",
 
   openGraph: {
     title: "ZXC[STREAM]",
