@@ -215,9 +215,10 @@ export default function Player() {
   const metadataLoad = !!tmdbId && !!metadata && !!title;
   const {
     data: source,
-    error: isSourceError,
+    isError: isSourceError,
     isLoading: sourceLoading,
     error: sourceError,
+    refetch: refetchSource,
   } = useSource({
     media_type,
     tmdbId,
@@ -345,7 +346,9 @@ export default function Player() {
       handleMarkQueue();
     };
   }, [serverIndex]);
+
   useEffect(() => {
+    if (isSourceRateLimited) return;
     if (isSourceError || source?.links.length === 0) {
       queryClient.removeQueries({
         queryKey: [
@@ -362,7 +365,7 @@ export default function Player() {
       });
       handleServerFail();
     }
-  }, [source?.links, isSourceError]);
+  }, [source?.links, isSourceError, isSourceRateLimited]);
 
   // default dub effect
   useEffect(() => {
@@ -589,11 +592,12 @@ export default function Player() {
     },
   );
   useEffect(() => {
-    if (!isRateLimited) return;
+    if (!isRateLimited && !isSourceRateLimited) return;
     if (cooldown > 0) return; // Don't restart if already counting down
 
     setCooldown(10);
-  }, [isRateLimited]);
+  }, [isRateLimited, isSourceRateLimited]);
+
   useEffect(() => {
     if (cooldown <= 0) return;
 
@@ -606,8 +610,13 @@ export default function Player() {
 
   const handleTryAgain = () => {
     if (cooldown > 0) return;
-    setCooldown(0);
-    refetchTmdb();
+    setCooldown(10);
+    if (isRateLimited) {
+      refetchTmdb();
+    }
+    if (isSourceRateLimited) {
+      refetchSource();
+    }
   };
 
   useEffect(() => {
