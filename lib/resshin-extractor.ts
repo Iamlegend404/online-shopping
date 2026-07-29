@@ -1081,7 +1081,11 @@ export async function extractResshin(
       type: (q.url ?? "").includes(".m3u8")
         ? ("hls" as const)
         : ("mp4" as const),
-      link: `https://proxy.zxcstream.xyz/proxy?url=${encodeURIComponent(q.url)}`,
+      // link: `https://proxy.zxcstream.xyz/proxy?url=${encodeURIComponent(q.url)}`,
+      link: q.url.replace(
+        "https://bcdn.hakunaymatata.com",
+        "https://proxy.zxcstream.xyz/nginx-proxy",
+      ),
     }));
 
   const active = dubs.find((d: any) => d.lanCode === activeDubLang) ?? dubs[0];
