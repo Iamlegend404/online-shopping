@@ -2,7 +2,7 @@ import { ServerTypes } from "@/types/player-types";
 
 export const RESSHIN_SERVER: ServerTypes = {
   name: "Resshin ",
-  server: "resshin__",
+  server: "resshin_",
   status: "queue",
   desc: "Download & Multi Audio Support",
 };
@@ -26,6 +26,12 @@ export const initialServers: ServerTypes[] = [
     server: "berkas__",
     status: "queue",
     desc: "4K Support",
+  },
+  {
+    name: "Resshin ",
+    server: "resshin__",
+    status: "queue",
+    desc: "Download & Multi Audio Support",
   },
   // {
   //   name: "Daedalus III",
