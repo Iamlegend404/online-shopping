@@ -586,11 +586,10 @@ export async function GET(req: NextRequest) {
         },
       );
     }
-
     sortedDownloads = sortedDownloads.filter(
-      (d: any) => d?.url && !d.url.includes("bcdnxw"),
+      (d: any) =>
+        d?.url && !d.url.includes("bcdnxw.") && !d.url.includes("bcdnxw/"),
     );
-
     if (!sortedDownloads.length) {
       logRequest(404, "only bcdnxw links available");
       return NextResponse.json(
@@ -598,6 +597,7 @@ export async function GET(req: NextRequest) {
         { status: 404 },
       );
     }
+
     const links = await Promise.all(
       sortedDownloads.map(async (d: any) => {
         const encrypted = await encryptUrl(d.url);
@@ -613,7 +613,7 @@ export async function GET(req: NextRequest) {
 
     const activeDub =
       dubs.find((d: any) => d.lanCode === activeDubLang) ?? dubs[0];
-    logRequest(200, "OK!!!!!");
+    logRequest(200, "ICARUS OK!!!!!");
     return NextResponse.json({
       success: true,
       links,
